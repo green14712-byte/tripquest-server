@@ -1,0 +1,150 @@
+[
+  {
+    "id": "column.public.missions.verificationMode",
+    "label": "Add column \"verificationMode\" to \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "verificationMode",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"verificationMode\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "verificationMode"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"verificationMode\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD COLUMN \"verificationMode\" text DEFAULT 'LOCATION_AND_QR' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"verificationMode\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "verificationMode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "setDefault.mission_completions.verificationMethod",
+    "label": "Set default on \"mission_completions\".\"verificationMethod\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "verificationMethod",
+        "table": "mission_completions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"verificationMethod\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "mission_completions",
+          "verificationMethod"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"verificationMethod\"",
+        "sql": "ALTER TABLE \"public\".\"mission_completions\" ALTER COLUMN \"verificationMethod\" SET DEFAULT 'BOTH'"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "setDefault.missions.qrActive",
+    "label": "Set default on \"missions\".\"qrActive\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "qrActive",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"qrActive\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "qrActive"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"qrActive\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ALTER COLUMN \"qrActive\" SET DEFAULT false"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "checkConstraint.missions.missions_verificationMode_check_2b7ecb9d",
+    "label": "Add check constraint \"missions_verificationMode_check_2b7ecb9d\" on \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "missions_verificationMode_check_2b7ecb9d",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"missions_verificationMode_check_2b7ecb9d\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "missions_verificationMode_check_2b7ecb9d",
+          "public",
+          "\"public\".\"missions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"missions_verificationMode_check_2b7ecb9d\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD CONSTRAINT \"missions_verificationMode_check_2b7ecb9d\" CHECK (\"verificationMode\" IN ('LOCATION_ONLY', 'LOCATION_AND_QR', 'LOCATION_OR_QR'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"missions_verificationMode_check_2b7ecb9d\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "missions_verificationMode_check_2b7ecb9d",
+          "public",
+          "\"public\".\"missions\""
+        ]
+      }
+    ]
+  }
+]

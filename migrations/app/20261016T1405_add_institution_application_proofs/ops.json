@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.institution_application_proofs",
+    "label": "Create table \"institution_application_proofs\"",
+    "summary": "Creates table \"institution_application_proofs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "institution_application_proofs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"institution_application_proofs\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"institution_application_proofs\"",
+        "sql": "CREATE TABLE \"public\".\"institution_application_proofs\" (\n  \"applicationId\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"fileKey\" text NOT NULL,\n  \"fileSize\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"mimeType\" text NOT NULL,\n  \"originalName\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"institution_application_proofs\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.institution_application_proofs.institution_application_proofs_fileKey_key",
+    "label": "Add unique constraint on \"institution_application_proofs\" (fileKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "institution_application_proofs_fileKey_key",
+        "table": "institution_application_proofs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"institution_application_proofs_fileKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_application_proofs_fileKey_key",
+          "public",
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"institution_application_proofs_fileKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"institution_application_proofs\" ADD CONSTRAINT \"institution_application_proofs_fileKey_key\" UNIQUE (\"fileKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"institution_application_proofs_fileKey_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_application_proofs_fileKey_key",
+          "public",
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.institution_application_proofs.institution_application_proofs_applicationId_idx_8158f91a",
+    "label": "Create index \"institution_application_proofs_applicationId_idx_8158f91a\" on \"institution_application_proofs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "institution_application_proofs_applicationId_idx_8158f91a",
+        "table": "institution_application_proofs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"institution_application_proofs_applicationId_idx_8158f91a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_application_proofs_applicationId_idx_8158f91a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"institution_application_proofs_applicationId_idx_8158f91a\"",
+        "sql": "CREATE INDEX \"institution_application_proofs_applicationId_idx_8158f91a\" ON \"public\".\"institution_application_proofs\" (\"applicationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"institution_application_proofs_applicationId_idx_8158f91a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_application_proofs_applicationId_idx_8158f91a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.institution_application_proofs.institution_application_proofs_applicationId_fkey",
+    "label": "Add foreign key \"institution_application_proofs_applicationId_fkey\" on \"institution_application_proofs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "institution_application_proofs_applicationId_fkey",
+        "table": "institution_application_proofs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"institution_application_proofs_applicationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_application_proofs_applicationId_fkey",
+          "public",
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"institution_application_proofs_applicationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"institution_application_proofs\"\nADD CONSTRAINT \"institution_application_proofs_applicationId_fkey\"\nFOREIGN KEY (\"applicationId\")\nREFERENCES \"public\".\"institution_applications\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"institution_application_proofs_applicationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_application_proofs_applicationId_fkey",
+          "public",
+          "\"public\".\"institution_application_proofs\""
+        ]
+      }
+    ]
+  }
+]

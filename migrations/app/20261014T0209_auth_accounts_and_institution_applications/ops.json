@@ -1,0 +1,704 @@
+[
+  {
+    "id": "table.email_verifications",
+    "label": "Create table \"email_verifications\"",
+    "summary": "Creates table \"email_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "email_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"email_verifications\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"email_verifications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"email_verifications\"",
+        "sql": "CREATE TABLE \"public\".\"email_verifications\" (\n  \"attemptCount\" int4 DEFAULT 0 NOT NULL,\n  \"codeHash\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"verificationTokenExpiresAt\" timestamptz,\n  \"verificationTokenHash\" text,\n  \"verifiedAt\" timestamptz,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"email_verifications\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"email_verifications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.institution_applications",
+    "label": "Create table \"institution_applications\"",
+    "summary": "Creates table \"institution_applications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "institution_applications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"institution_applications\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"institution_applications\"",
+        "sql": "CREATE TABLE \"public\".\"institution_applications\" (\n  \"address\" text,\n  \"applicantId\" int4 NOT NULL,\n  \"contactEmail\" text NOT NULL,\n  \"contactPhone\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"id\" SERIAL NOT NULL,\n  \"institutionName\" text NOT NULL,\n  \"proofFileKey\" text,\n  \"rejectionReason\" text,\n  \"representativeName\" text NOT NULL,\n  \"reviewedAt\" timestamptz,\n  \"reviewerId\" int4,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"website\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"institution_applications_status_check_56005a61\" CHECK (\"status\" IN ('PENDING', 'APPROVED', 'REJECTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"institution_applications\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.deletedAt",
+    "label": "Add column \"deletedAt\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "deletedAt",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"deletedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "deletedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"deletedAt\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"deletedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"deletedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "deletedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.emailVerified",
+    "label": "Add column \"emailVerified\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "emailVerified",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"emailVerified\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "emailVerified"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"emailVerified\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"emailVerified\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"emailVerified\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "emailVerified"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.emailVerifiedAt",
+    "label": "Add column \"emailVerifiedAt\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "emailVerifiedAt",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"emailVerifiedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "emailVerifiedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"emailVerifiedAt\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"emailVerifiedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"emailVerifiedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "emailVerifiedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.googleSub",
+    "label": "Add column \"googleSub\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "googleSub",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"googleSub\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "googleSub"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"googleSub\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"googleSub\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"googleSub\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "googleSub"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.passwordHash",
+    "label": "Add column \"passwordHash\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "passwordHash",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"passwordHash\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "passwordHash"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"passwordHash\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"passwordHash\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"passwordHash\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "passwordHash"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.status",
+    "label": "Add column \"status\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "status",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"status\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "status"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"status\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"status\" text DEFAULT 'ACTIVE' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"status\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "status"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.suspendedAt",
+    "label": "Add column \"suspendedAt\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "suspendedAt",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"suspendedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "suspendedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"suspendedAt\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"suspendedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"suspendedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "suspendedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.suspensionReason",
+    "label": "Add column \"suspensionReason\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "suspensionReason",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"suspensionReason\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "suspensionReason"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"suspensionReason\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"suspensionReason\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"suspensionReason\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "suspensionReason"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.email_verifications.email_verifications_email_key",
+    "label": "Add unique constraint on \"email_verifications\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "email_verifications_email_key",
+        "table": "email_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"email_verifications_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "email_verifications_email_key",
+          "public",
+          "\"public\".\"email_verifications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"email_verifications_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"email_verifications\" ADD CONSTRAINT \"email_verifications_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"email_verifications_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "email_verifications_email_key",
+          "public",
+          "\"public\".\"email_verifications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.users.users_status_check_3a7c0f48",
+    "label": "Add check constraint \"users_status_check_3a7c0f48\" on \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "users_status_check_3a7c0f48",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_status_check_3a7c0f48\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_status_check_3a7c0f48",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"users_status_check_3a7c0f48\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_status_check_3a7c0f48\" CHECK (\"status\" IN ('ACTIVE', 'SUSPENDED', 'DELETED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_status_check_3a7c0f48\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_status_check_3a7c0f48",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_googleSub_key",
+    "label": "Add unique constraint on \"users\" (googleSub)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_googleSub_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_googleSub_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_googleSub_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_googleSub_key\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_googleSub_key\" UNIQUE (\"googleSub\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_googleSub_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_googleSub_key",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.institution_applications.institution_applications_applicantId_idx_f3b3eac3",
+    "label": "Create index \"institution_applications_applicantId_idx_f3b3eac3\" on \"institution_applications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "institution_applications_applicantId_idx_f3b3eac3",
+        "table": "institution_applications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"institution_applications_applicantId_idx_f3b3eac3\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications_applicantId_idx_f3b3eac3\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"institution_applications_applicantId_idx_f3b3eac3\"",
+        "sql": "CREATE INDEX \"institution_applications_applicantId_idx_f3b3eac3\" ON \"public\".\"institution_applications\" (\"applicantId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"institution_applications_applicantId_idx_f3b3eac3\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications_applicantId_idx_f3b3eac3\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.institution_applications.institution_applications_reviewerId_idx_25a27b4e",
+    "label": "Create index \"institution_applications_reviewerId_idx_25a27b4e\" on \"institution_applications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "institution_applications_reviewerId_idx_25a27b4e",
+        "table": "institution_applications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"institution_applications_reviewerId_idx_25a27b4e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"institution_applications_reviewerId_idx_25a27b4e\"",
+        "sql": "CREATE INDEX \"institution_applications_reviewerId_idx_25a27b4e\" ON \"public\".\"institution_applications\" (\"reviewerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"institution_applications_reviewerId_idx_25a27b4e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"institution_applications_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.institution_applications.institution_applications_applicantId_fkey",
+    "label": "Add foreign key \"institution_applications_applicantId_fkey\" on \"institution_applications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "institution_applications_applicantId_fkey",
+        "table": "institution_applications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"institution_applications_applicantId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_applications_applicantId_fkey",
+          "public",
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"institution_applications_applicantId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"institution_applications\"\nADD CONSTRAINT \"institution_applications_applicantId_fkey\"\nFOREIGN KEY (\"applicantId\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"institution_applications_applicantId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_applications_applicantId_fkey",
+          "public",
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.institution_applications.institution_applications_reviewerId_fkey",
+    "label": "Add foreign key \"institution_applications_reviewerId_fkey\" on \"institution_applications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "institution_applications_reviewerId_fkey",
+        "table": "institution_applications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"institution_applications_reviewerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_applications_reviewerId_fkey",
+          "public",
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"institution_applications_reviewerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"institution_applications\"\nADD CONSTRAINT \"institution_applications_reviewerId_fkey\"\nFOREIGN KEY (\"reviewerId\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"institution_applications_reviewerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "institution_applications_reviewerId_fkey",
+          "public",
+          "\"public\".\"institution_applications\""
+        ]
+      }
+    ]
+  }
+]

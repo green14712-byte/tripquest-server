@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.challenges.coverPositionX",
+    "label": "Add column \"coverPositionX\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "coverPositionX",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"coverPositionX\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverPositionX"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"coverPositionX\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"coverPositionX\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"coverPositionX\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverPositionX"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.coverPositionY",
+    "label": "Add column \"coverPositionY\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "coverPositionY",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"coverPositionY\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverPositionY"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"coverPositionY\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"coverPositionY\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"coverPositionY\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverPositionY"
+        ]
+      }
+    ]
+  }
+]

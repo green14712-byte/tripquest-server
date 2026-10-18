@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.missions.photoPositionX",
+    "label": "Add column \"photoPositionX\" to \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photoPositionX",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photoPositionX\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoPositionX"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photoPositionX\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD COLUMN \"photoPositionX\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photoPositionX\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoPositionX"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.missions.photoPositionY",
+    "label": "Add column \"photoPositionY\" to \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photoPositionY",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photoPositionY\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoPositionY"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photoPositionY\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD COLUMN \"photoPositionY\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photoPositionY\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoPositionY"
+        ]
+      }
+    ]
+  }
+]

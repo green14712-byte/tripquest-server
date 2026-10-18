@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.challenges.coverImageKey",
+    "label": "Add column \"coverImageKey\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "coverImageKey",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"coverImageKey\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverImageKey"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"coverImageKey\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"coverImageKey\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"coverImageKey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "coverImageKey"
+        ]
+      }
+    ]
+  }
+]

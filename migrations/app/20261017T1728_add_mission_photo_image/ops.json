@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.missions.photoImageKey",
+    "label": "Add column \"photoImageKey\" to \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "photoImageKey",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"photoImageKey\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoImageKey"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"photoImageKey\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD COLUMN \"photoImageKey\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"photoImageKey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "photoImageKey"
+        ]
+      }
+    ]
+  }
+]

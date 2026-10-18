@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.missions.status",
+    "label": "Add column \"status\" to \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "status",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"status\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "status"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"status\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD COLUMN \"status\" text DEFAULT 'ACTIVE' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"status\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "missions",
+          "status"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.missions.missions_status_check_ee520df2",
+    "label": "Add check constraint \"missions_status_check_ee520df2\" on \"missions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "missions_status_check_ee520df2",
+        "table": "missions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"missions_status_check_ee520df2\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "missions_status_check_ee520df2",
+          "public",
+          "\"public\".\"missions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"missions_status_check_ee520df2\"",
+        "sql": "ALTER TABLE \"public\".\"missions\" ADD CONSTRAINT \"missions_status_check_ee520df2\" CHECK (\"status\" IN ('ACTIVE', 'INACTIVE'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"missions_status_check_ee520df2\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "missions_status_check_ee520df2",
+          "public",
+          "\"public\".\"missions\""
+        ]
+      }
+    ]
+  }
+]
