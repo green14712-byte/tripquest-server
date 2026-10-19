@@ -21,13 +21,10 @@ export class MailService {
   }
 
   async sendVerificationCode(to: string, code: string): Promise<void> {
-    const mailUser = this.configService.getOrThrow<string>('MAIL_USER');
-
-    const mailFrom =
-      this.configService.get<string>('MAIL_FROM') ?? 'Korea Trip Quest';
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
 
     await this.transporter.sendMail({
-      from: `"${mailFrom}" <${mailUser}>`,
+      from: mailFrom,
       to,
       subject: '[Korea Trip Quest] 회원가입 이메일 인증번호',
       text:
