@@ -20,6 +20,9 @@ export class MailService {
     });
   }
 
+  /*
+   * 회원가입 이메일 인증번호 발송
+   */
   async sendVerificationCode(to: string, code: string): Promise<void> {
     const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
 
@@ -30,6 +33,23 @@ export class MailService {
       text:
         `Korea Trip Quest 회원가입 인증번호는 ${code}입니다.\n\n` +
         '인증번호는 10분 동안 유효합니다.',
+    });
+  }
+
+  /*
+   * 비밀번호 재설정 인증번호 발송
+   */
+  async sendPasswordResetCode(to: string, code: string): Promise<void> {
+    const mailFrom = this.configService.getOrThrow<string>('MAIL_FROM');
+
+    await this.transporter.sendMail({
+      from: mailFrom,
+      to,
+      subject: '[Korea Trip Quest] 비밀번호 재설정 인증번호',
+      text:
+        `Korea Trip Quest 비밀번호 재설정 인증번호는 ${code}입니다.\n\n` +
+        '인증번호는 10분 동안 유효합니다.\n\n' +
+        '본인이 요청하지 않았다면 이 메일을 무시해주세요.',
     });
   }
 }

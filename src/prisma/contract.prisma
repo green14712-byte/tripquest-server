@@ -124,6 +124,36 @@ model EmailVerification {
   @@map("email_verifications")
 }
 
+model PasswordReset {
+  id Int @id @default(autoincrement())
+
+  // 비밀번호 재설정을 요청한 이메일
+  email String @unique
+
+  // 6자리 인증번호는 원문이 아닌 Hash 저장
+  codeHash String
+
+  // 인증번호 만료시간
+  expiresAt TimestamptzString
+
+  // 무차별 대입 방지를 위한 실패 횟수
+  attemptCount Int @default(0)
+
+  // 인증번호 검증 성공 시간
+  verifiedAt TimestamptzString?
+
+  // 실제 비밀번호 재설정 단계에서 사용하는 일회용 토큰
+  resetTokenHash String?
+
+  // 재설정 토큰 만료시간
+  resetTokenExpiresAt TimestamptzString?
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@map("password_resets")
+}
+
 model Institution {
   id          Int     @id @default(autoincrement())
   name        String

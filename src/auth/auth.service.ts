@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 import { createHash, randomBytes, randomInt } from 'crypto';
 
@@ -24,11 +25,37 @@ type AdminUserQuery = {
   status?: 'ACTIVE' | 'SUSPENDED' | 'DELETED';
 };
 
+type SupabaseGoogleUser = {
+  id: string;
+  email?: string;
+  email_confirmed_at?: string | null;
+
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+  };
+
+  user_metadata?: {
+    name?: string;
+    full_name?: string;
+  };
+
+  identities?: Array<{
+    provider?: string;
+
+    identity_data?: {
+      sub?: string;
+      email?: string;
+    };
+  }>;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   /*
@@ -378,6 +405,638 @@ export class AuthService {
   }
 
   /*
+   * Google 간편가입 / 로그인
+   *
+   * Supabase Auth에서 발급된 access token을
+   * Supabase Auth 서버에 다시 전달하여 검증한다.
+   *
+   * 규칙
+   *
+   * 1. googleSub가 이미 존재
+   *    → 기존 계정 로그인
+   *
+   * 2. googleSub 없음 + 같은 이메일도 없음
+   *    → 새로운 USER 생성
+   *
+   * 3. googleSub 없음 + 같은 이메일 계정 존재
+   *    → 자동 연결하지 않고 로그인 차단
+   */
+  async googleLogin(supabaseAccessToken: string) {
+    const accessToken = supabaseAccessToken.trim();
+
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        'Google 로그인 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    const supabaseUrl = this.configService.getOrThrow<string>('SUPABASE_URL');
+
+    const supabaseSecretKey = this.configService.getOrThrow<string>(
+      'SUPABASE_SECRET_KEY',
+    );
+
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+
+        apikey: supabaseSecretKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new UnauthorizedException(
+        '유효하지 않은 Google 로그인 정보입니다.',
+      );
+    }
+
+    const supabaseUser = (await response.json()) as SupabaseGoogleUser;
+
+    const googleIdentity = supabaseUser.identities?.find(
+      (identity) => identity.provider === 'google',
+    );
+
+    if (!googleIdentity) {
+      throw new UnauthorizedException('Google로 인증된 사용자가 아닙니다.');
+    }
+
+    const googleSub = googleIdentity.identity_data?.sub?.trim();
+
+    if (!googleSub) {
+      throw new UnauthorizedException(
+        'Google 계정 식별 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    const normalizedEmail = supabaseUser.email?.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new BadRequestException(
+        'Google 계정에서 이메일 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    if (!supabaseUser.email_confirmed_at) {
+      throw new ForbiddenException('Google 이메일 인증을 확인할 수 없습니다.');
+    }
+
+    const googleUser = await db.orm.public.User.first({
+      googleSub,
+    });
+
+    if (googleUser) {
+      if (googleUser.status === 'SUSPENDED') {
+        throw new ForbiddenException('정지된 계정입니다.');
+      }
+
+      if (googleUser.status === 'DELETED') {
+        throw new ForbiddenException('사용할 수 없는 계정입니다.');
+      }
+
+      const koreaTripQuestAccessToken = await this.jwtService.signAsync({
+        sub: googleUser.id,
+
+        role: googleUser.role,
+
+        institutionId: googleUser.institutionId,
+      });
+
+      return {
+        message: 'Google 로그인에 성공했습니다.',
+
+        accessToken: koreaTripQuestAccessToken,
+
+        user: {
+          id: googleUser.id,
+
+          email: googleUser.email,
+
+          nickname: googleUser.nickname,
+
+          role: googleUser.role,
+
+          status: googleUser.status,
+
+          institutionId: googleUser.institutionId,
+        },
+      };
+    }
+
+    const existingEmailUser = await db.orm.public.User.first({
+      email: normalizedEmail,
+    });
+
+    if (existingEmailUser) {
+      throw new ConflictException(
+        '이미 이메일로 가입된 계정입니다. 기존 이메일 계정으로 로그인한 뒤 Google 계정을 연결해주세요.',
+      );
+    }
+
+    const googleName = (
+      supabaseUser.user_metadata?.full_name ??
+      supabaseUser.user_metadata?.name ??
+      ''
+    ).trim();
+
+    const nickname = googleName.length >= 2 ? googleName : null;
+
+    const now = new Date().toISOString();
+
+    const createdUser = await db.orm.public.User.create({
+      email: normalizedEmail,
+
+      nickname,
+
+      passwordHash: null,
+
+      googleSub,
+
+      emailVerified: true,
+
+      emailVerifiedAt: now,
+
+      institutionId: null,
+    });
+
+    const koreaTripQuestAccessToken = await this.jwtService.signAsync({
+      sub: createdUser.id,
+
+      role: createdUser.role,
+
+      institutionId: createdUser.institutionId,
+    });
+
+    return {
+      message: 'Google 간편가입 및 로그인에 성공했습니다.',
+
+      accessToken: koreaTripQuestAccessToken,
+
+      user: {
+        id: createdUser.id,
+
+        email: createdUser.email,
+
+        nickname: createdUser.nickname,
+
+        role: createdUser.role,
+
+        status: createdUser.status,
+
+        institutionId: createdUser.institutionId,
+      },
+    };
+  }
+
+  /*
+   * 기존 이메일 계정에 Google 계정 연결
+   *
+   * 조건
+   *
+   * 1. 현재 로그인된 Korea Trip Quest 사용자여야 한다.
+   * 2. Supabase access token이 실제 Google 인증 세션이어야 한다.
+   * 3. Google 이메일과 현재 계정 이메일이 같아야 한다.
+   * 4. 해당 Google 계정이 다른 사용자에게 연결되어 있으면 안 된다.
+   */
+  async linkGoogleAccount(userId: number, supabaseAccessToken: string) {
+    const accessToken = supabaseAccessToken.trim();
+
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        'Google 로그인 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    const currentUser = await db.orm.public.User.first({
+      id: userId,
+    });
+
+    if (!currentUser) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+
+    if (currentUser.status !== 'ACTIVE') {
+      throw new ForbiddenException('사용할 수 없는 계정입니다.');
+    }
+
+    if (currentUser.googleSub) {
+      throw new ConflictException('이미 Google 계정이 연결되어 있습니다.');
+    }
+
+    const supabaseUrl = this.configService.getOrThrow<string>('SUPABASE_URL');
+
+    const supabaseSecretKey = this.configService.getOrThrow<string>(
+      'SUPABASE_SECRET_KEY',
+    );
+
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+
+        apikey: supabaseSecretKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new UnauthorizedException(
+        '유효하지 않은 Google 로그인 정보입니다.',
+      );
+    }
+
+    const supabaseUser = (await response.json()) as SupabaseGoogleUser;
+
+    const googleIdentity = supabaseUser.identities?.find(
+      (identity) => identity.provider === 'google',
+    );
+
+    if (!googleIdentity) {
+      throw new UnauthorizedException('Google로 인증된 사용자가 아닙니다.');
+    }
+
+    const googleSub = googleIdentity.identity_data?.sub?.trim();
+
+    if (!googleSub) {
+      throw new UnauthorizedException(
+        'Google 계정 식별 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    const googleEmail = supabaseUser.email?.trim().toLowerCase();
+
+    if (!googleEmail) {
+      throw new BadRequestException(
+        'Google 계정에서 이메일 정보를 확인할 수 없습니다.',
+      );
+    }
+
+    if (!supabaseUser.email_confirmed_at) {
+      throw new ForbiddenException('Google 이메일 인증을 확인할 수 없습니다.');
+    }
+
+    const currentEmail = currentUser.email.trim().toLowerCase();
+
+    if (googleEmail !== currentEmail) {
+      throw new ConflictException(
+        '현재 로그인된 계정과 동일한 이메일의 Google 계정만 연결할 수 있습니다.',
+      );
+    }
+
+    const existingGoogleUser = await db.orm.public.User.first({
+      googleSub,
+    });
+
+    if (existingGoogleUser && existingGoogleUser.id !== currentUser.id) {
+      throw new ConflictException('이미 다른 계정에 연결된 Google 계정입니다.');
+    }
+
+    const updatedUser = await db.orm.public.User.where({
+      id: currentUser.id,
+    }).update({
+      googleSub,
+    });
+
+    if (!updatedUser) {
+      throw new BadRequestException('Google 계정 연결에 실패했습니다.');
+    }
+
+    return {
+      message: 'Google 계정이 연결되었습니다.',
+
+      user: {
+        id: updatedUser.id,
+
+        email: updatedUser.email,
+
+        nickname: updatedUser.nickname,
+
+        role: updatedUser.role,
+
+        status: updatedUser.status,
+
+        institutionId: updatedUser.institutionId,
+      },
+    };
+  }
+
+  /*
+   * 현재 로그인 사용자 정보
+   *
+   * googleSub 실제 값은 프론트에 공개하지 않고
+   * Google 계정 연결 여부만 boolean으로 반환한다.
+   */
+  async getCurrentUser(userId: number) {
+    const user = await db.orm.public.User.first({
+      id: userId,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+
+    if (user.status === 'SUSPENDED') {
+      throw new ForbiddenException('정지된 계정입니다.');
+    }
+
+    if (user.status === 'DELETED') {
+      throw new ForbiddenException('사용할 수 없는 계정입니다.');
+    }
+
+    return {
+      user: {
+        id: user.id,
+
+        email: user.email,
+
+        nickname: user.nickname,
+
+        role: user.role,
+
+        status: user.status,
+
+        institutionId: user.institutionId,
+
+        googleConnected: Boolean(user.googleSub),
+      },
+    };
+  }
+
+  /*
+   * 로그인 사용자 비밀번호 변경
+   */
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await db.orm.public.User.first({
+      id: userId,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new ForbiddenException('사용할 수 없는 계정입니다.');
+    }
+
+    if (!user.passwordHash) {
+      throw new BadRequestException(
+        '비밀번호로 가입한 계정에서만 비밀번호를 변경할 수 있습니다.',
+      );
+    }
+
+    const currentPasswordMatches = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
+
+    if (!currentPasswordMatches) {
+      throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
+    }
+
+    const samePassword = await bcrypt.compare(newPassword, user.passwordHash);
+
+    if (samePassword) {
+      throw new BadRequestException(
+        '새 비밀번호는 현재 비밀번호와 다르게 설정해주세요.',
+      );
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+    const updatedUser = await db.orm.public.User.where({
+      id: user.id,
+    }).update({
+      passwordHash: newPasswordHash,
+    });
+
+    if (!updatedUser) {
+      throw new BadRequestException('비밀번호 변경에 실패했습니다.');
+    }
+
+    return {
+      message: '비밀번호가 변경되었습니다.',
+    };
+  }
+
+  /*
+   * 비밀번호 재설정 인증번호 발송
+   */
+  async sendPasswordResetCode(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await db.orm.public.User.first({
+      email: normalizedEmail,
+    });
+
+    if (!user || user.status !== 'ACTIVE' || !user.passwordHash) {
+      return {
+        message: '입력한 이메일이 가입된 계정이라면 인증번호가 전송됩니다.',
+      };
+    }
+
+    const code = randomInt(100000, 1000000).toString();
+
+    const codeHash = await bcrypt.hash(code, 10);
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    await db.orm.public.PasswordReset.upsert({
+      create: {
+        email: normalizedEmail,
+
+        codeHash,
+
+        expiresAt,
+
+        attemptCount: 0,
+
+        verifiedAt: null,
+
+        resetTokenHash: null,
+
+        resetTokenExpiresAt: null,
+      },
+
+      update: {
+        codeHash,
+
+        expiresAt,
+
+        attemptCount: 0,
+
+        verifiedAt: null,
+
+        resetTokenHash: null,
+
+        resetTokenExpiresAt: null,
+      },
+
+      conflictOn: {
+        email: normalizedEmail,
+      },
+    });
+
+    await this.mailService.sendPasswordResetCode(normalizedEmail, code);
+
+    return {
+      message: '입력한 이메일이 가입된 계정이라면 인증번호가 전송됩니다.',
+    };
+  }
+
+  /*
+   * 비밀번호 재설정 인증번호 확인
+   */
+  async verifyPasswordResetCode(email: string, code: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const passwordReset = await db.orm.public.PasswordReset.first({
+      email: normalizedEmail,
+    });
+
+    if (!passwordReset) {
+      throw new BadRequestException(
+        '비밀번호 재설정 인증을 먼저 요청해주세요.',
+      );
+    }
+
+    if (new Date(passwordReset.expiresAt).getTime() < Date.now()) {
+      throw new BadRequestException(
+        '인증번호가 만료되었습니다. 새 인증번호를 요청해주세요.',
+      );
+    }
+
+    if (passwordReset.attemptCount >= 5) {
+      throw new BadRequestException(
+        '인증번호 입력 횟수를 초과했습니다. 새 인증번호를 요청해주세요.',
+      );
+    }
+
+    const matches = await bcrypt.compare(code, passwordReset.codeHash);
+
+    if (!matches) {
+      await db.orm.public.PasswordReset.where({
+        id: passwordReset.id,
+      }).update({
+        attemptCount: passwordReset.attemptCount + 1,
+      });
+
+      throw new BadRequestException('인증번호가 올바르지 않습니다.');
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+
+    const resetTokenHash = createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    const resetTokenExpiresAt = new Date(
+      Date.now() + 15 * 60 * 1000,
+    ).toISOString();
+
+    await db.orm.public.PasswordReset.where({
+      id: passwordReset.id,
+    }).update({
+      verifiedAt: new Date().toISOString(),
+
+      resetTokenHash,
+
+      resetTokenExpiresAt,
+    });
+
+    return {
+      message: '비밀번호 재설정 이메일 인증이 완료되었습니다.',
+
+      resetToken,
+    };
+  }
+
+  /*
+   * 비밀번호 재설정
+   */
+  async resetPassword(email: string, resetToken: string, newPassword: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await db.orm.public.User.first({
+      email: normalizedEmail,
+    });
+
+    if (!user || user.status !== 'ACTIVE' || !user.passwordHash) {
+      throw new BadRequestException('비밀번호를 재설정할 수 없는 계정입니다.');
+    }
+
+    const passwordReset = await db.orm.public.PasswordReset.first({
+      email: normalizedEmail,
+    });
+
+    if (!passwordReset) {
+      throw new BadRequestException(
+        '비밀번호 재설정 인증을 먼저 진행해주세요.',
+      );
+    }
+
+    if (
+      !passwordReset.verifiedAt ||
+      !passwordReset.resetTokenHash ||
+      !passwordReset.resetTokenExpiresAt
+    ) {
+      throw new BadRequestException(
+        '비밀번호 재설정 인증이 완료되지 않았습니다.',
+      );
+    }
+
+    if (new Date(passwordReset.resetTokenExpiresAt).getTime() < Date.now()) {
+      throw new BadRequestException(
+        '비밀번호 재설정 정보가 만료되었습니다. 다시 인증해주세요.',
+      );
+    }
+
+    const submittedResetTokenHash = createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    if (submittedResetTokenHash !== passwordReset.resetTokenHash) {
+      throw new BadRequestException(
+        '유효하지 않은 비밀번호 재설정 정보입니다.',
+      );
+    }
+
+    const samePassword = await bcrypt.compare(newPassword, user.passwordHash);
+
+    if (samePassword) {
+      throw new BadRequestException(
+        '새 비밀번호는 기존 비밀번호와 다르게 설정해주세요.',
+      );
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+    await db.transaction(async (tx) => {
+      const updatedUser = await tx.orm.public.User.where({
+        id: user.id,
+      }).update({
+        passwordHash: newPasswordHash,
+      });
+
+      if (!updatedUser) {
+        throw new BadRequestException('비밀번호 재설정에 실패했습니다.');
+      }
+
+      await tx.orm.public.PasswordReset.where({
+        id: passwordReset.id,
+      }).delete();
+    });
+
+    return {
+      message: '비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해주세요.',
+    };
+  }
+
+  /*
    * 회원 본인 탈퇴
    */
   async withdrawAccount(userId: number, password: string) {
@@ -626,57 +1285,34 @@ export class AuthService {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
-    /*
-     * 활성 상태에서만 관리자 승격 허용
-     */
     if (user.status !== 'ACTIVE') {
       throw new ConflictException(
         '활성 상태의 계정만 관리자로 승격할 수 있습니다.',
       );
     }
 
-    /*
-     * 이미 관리자
-     */
     if (user.role === 'ADMIN') {
       throw new ConflictException('이미 관리자 계정입니다.');
     }
 
-    /*
-     * 기관 계정은 관리자 승격 대상에서 제외
-     */
     if (user.role === 'INSTITUTION' || user.institutionId !== null) {
       throw new ConflictException(
         '기관 계정은 바로 관리자로 승격할 수 없습니다.',
       );
     }
 
-    /*
-     * 현재는 일반 USER만 승격
-     */
     if (user.role !== 'USER') {
       throw new ConflictException(
         '일반 사용자 계정만 관리자로 승격할 수 있습니다.',
       );
     }
 
-    /*
-     * 이메일 인증된 계정만 관리자 가능
-     */
     if (!user.emailVerified) {
       throw new ConflictException(
         '이메일 인증이 완료된 계정만 관리자로 승격할 수 있습니다.',
       );
     }
 
-    /*
-     * 처리 중인 기관 가입 신청이 있다면
-     * 관리자 승격 전에 먼저 신청을 처리한다.
-     *
-     * USER → ADMIN 변경과
-     * 기관 가입 심사가 동시에 존재하는
-     * 모순 상태를 방지한다.
-     */
     const pendingInstitutionApplication =
       await db.orm.public.InstitutionApplication.first({
         applicantId: user.id,

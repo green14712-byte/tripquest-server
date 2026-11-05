@@ -11,19 +11,23 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthenticatedRequest } from './jwt-auth.guard';
-
 import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
 
 import { AdminUserQueryDto } from './dto/admin-user-query.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
+import { LinkGoogleDto } from './dto/link-google.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendEmailCodeDto } from './dto/send-email-code.dto';
+import { SendPasswordResetCodeDto } from './dto/send-password-reset-code.dto';
 import { SuspendUserDto } from './dto/suspend-user.dto';
 import { VerifyEmailCodeDto } from './dto/verify-email-code.dto';
+import { VerifyPasswordResetCodeDto } from './dto/verify-password-reset-code.dto';
 import { WithdrawAccountDto } from './dto/withdraw-account.dto';
 
 @Controller('auth')
@@ -69,7 +73,7 @@ export class AuthController {
   }
 
   /*
-   * 로그인
+   * 이메일 / 비밀번호 로그인
    */
   @Post('login')
   login(
@@ -80,7 +84,79 @@ export class AuthController {
   }
 
   /*
+   * Google 간편가입 / 로그인
+   *
+   * 프론트에서 Supabase Auth가 발급한
+   * access token을 전달받는다.
+   */
+  @Post('google')
+  googleLogin(
+    @Body()
+    dto: GoogleLoginDto,
+  ) {
+    return this.authService.googleLogin(dto.accessToken);
+  }
+
+  /*
+   * 로그인된 기존 계정에 Google 계정 연결
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('google/link')
+  linkGoogleAccount(
+    @Req()
+    request: AuthenticatedRequest,
+
+    @Body()
+    dto: LinkGoogleDto,
+  ) {
+    return this.authService.linkGoogleAccount(request.user.id, dto.accessToken);
+  }
+
+  /*
+   * 비밀번호 재설정 인증번호 발송
+   */
+  @Post('password-reset/send-code')
+  sendPasswordResetCode(
+    @Body()
+    dto: SendPasswordResetCodeDto,
+  ) {
+    return this.authService.sendPasswordResetCode(dto.email);
+  }
+
+  /*
+   * 비밀번호 재설정 인증번호 확인
+   */
+  @Post('password-reset/verify-code')
+  verifyPasswordResetCode(
+    @Body()
+    dto: VerifyPasswordResetCodeDto,
+  ) {
+    return this.authService.verifyPasswordResetCode(dto.email, dto.code);
+  }
+
+  /*
+   * 비밀번호 재설정
+   */
+  @Post('password-reset/reset')
+  resetPassword(
+    @Body()
+    dto: ResetPasswordDto,
+  ) {
+    return this.authService.resetPassword(
+      dto.email,
+      dto.resetToken,
+      dto.newPassword,
+    );
+  }
+
+  /*
    * 현재 로그인 사용자
+   *
+   * JWT에 들어 있는 사용자 정보를 그대로 반환하지 않고
+   * DB에서 현재 사용자 정보를 다시 조회한다.
+   *
+   * Google 계정 연결 여부는
+   * googleSub 실제 값 대신 googleConnected boolean만 반환한다.
    */
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -88,9 +164,26 @@ export class AuthController {
     @Req()
     request: AuthenticatedRequest,
   ) {
-    return {
-      user: request.user,
-    };
+    return this.authService.getCurrentUser(request.user.id);
+  }
+
+  /*
+   * 로그인 사용자 비밀번호 변경
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  changePassword(
+    @Req()
+    request: AuthenticatedRequest,
+
+    @Body()
+    dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      request.user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 
   /*

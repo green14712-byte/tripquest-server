@@ -1,0 +1,83 @@
+[
+  {
+    "id": "table.password_resets",
+    "label": "Create table \"password_resets\"",
+    "summary": "Creates table \"password_resets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "password_resets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"password_resets\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"password_resets\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"password_resets\"",
+        "sql": "CREATE TABLE \"public\".\"password_resets\" (\n  \"attemptCount\" int4 DEFAULT 0 NOT NULL,\n  \"codeHash\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"resetTokenExpiresAt\" timestamptz,\n  \"resetTokenHash\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"verifiedAt\" timestamptz,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"password_resets\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"password_resets\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.password_resets.password_resets_email_key",
+    "label": "Add unique constraint on \"password_resets\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "password_resets_email_key",
+        "table": "password_resets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"password_resets_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_resets_email_key",
+          "public",
+          "\"public\".\"password_resets\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"password_resets_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"password_resets\" ADD CONSTRAINT \"password_resets_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"password_resets_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_resets_email_key",
+          "public",
+          "\"public\".\"password_resets\""
+        ]
+      }
+    ]
+  }
+]
