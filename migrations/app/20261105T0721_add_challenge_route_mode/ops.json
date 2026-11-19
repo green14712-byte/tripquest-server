@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.challenges.routeMode",
+    "label": "Add column \"routeMode\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "routeMode",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"routeMode\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "routeMode"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"routeMode\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"routeMode\" text DEFAULT 'WALKING' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"routeMode\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "routeMode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.challenges.challenges_routeMode_check_95e5293e",
+    "label": "Add check constraint \"challenges_routeMode_check_95e5293e\" on \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "challenges_routeMode_check_95e5293e",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"challenges_routeMode_check_95e5293e\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_routeMode_check_95e5293e",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"challenges_routeMode_check_95e5293e\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD CONSTRAINT \"challenges_routeMode_check_95e5293e\" CHECK (\"routeMode\" IN ('WALKING', 'CYCLING', 'DRIVING'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"challenges_routeMode_check_95e5293e\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_routeMode_check_95e5293e",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ]
+  }
+]

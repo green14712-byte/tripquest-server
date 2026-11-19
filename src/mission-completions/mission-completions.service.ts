@@ -293,10 +293,66 @@ export class MissionCompletionsService {
       verificationMethod,
     });
 
+    /*
+     * Mission 완료 저장 직후
+     * Challenge의 현재 ACTIVE Mission을 모두 완료했는지 확인한다.
+     *
+     * 최초 100% 완료 시에만
+     * ChallengeParticipation.completedAt을 기록한다.
+     *
+     * 이미 completedAt이 존재하는 사용자는
+     * 기관이 이후 Mission을 추가하거나 비활성화하더라도
+     * 기존 완료 시각을 절대 변경하지 않는다.
+     */
+    const challengeCompletion = await this.markChallengeCompletedIfNeeded(
+      userId,
+      challenge.id,
+      participation.id,
+      participation.completedAt,
+    );
+
+    /*
+     * 이번 Mission 인증으로 Challenge를
+     * "처음" 완주한 경우에만 완료 배지를 지급한다.
+     *
+     * 기존 completedAt이 있던 사용자에게는
+     * 소급 지급하지 않는다.
+     */
+    const badgeAward =
+      challengeCompletion.justCompleted && challengeCompletion.completedAt
+        ? await this.awardChallengeBadgeIfNeeded(
+            userId,
+            challenge.id,
+            challenge.currentBadgeVersionId,
+            challengeCompletion.completedAt,
+          )
+        : {
+            awarded: false,
+            userBadge: null,
+          };
+
     return {
-      message: '미션 인증이 완료되었습니다.',
+      message: badgeAward.awarded
+        ? '미션 인증이 완료되었으며 Challenge를 완주하고 완료 배지를 획득했습니다.'
+        : challengeCompletion.justCompleted
+          ? '미션 인증이 완료되었으며 Challenge를 완주했습니다.'
+          : '미션 인증이 완료되었습니다.',
 
       completion,
+
+      challengeCompletion: {
+        ...challengeCompletion,
+
+        /*
+         * 프론트에서 Challenge 완료 직후
+         * 배지 획득 UI를 보여줄 때 사용할 수 있다.
+         */
+        badgeAwarded: badgeAward.awarded,
+
+        userBadgeId: badgeAward.userBadge?.id ?? null,
+
+        badgeVersionId: badgeAward.userBadge?.badgeVersionId ?? null,
+      },
 
       verification: {
         missionId: mission.id,
@@ -475,6 +531,189 @@ export class MissionCompletionsService {
       completionId: completion.id,
       hasPhotoImage: false,
       photoImageUrl: null,
+    };
+  }
+
+  /*
+   * USER가 Challenge의 현재 ACTIVE Mission을
+   * 모두 완료했는지 확인하고 최초 완료 시각을 영구 보존한다.
+   *
+   * 반환값:
+   * - completed: 영구 완료 상태인지 여부
+   * - justCompleted: 이번 Mission 인증으로 최초 완료되었는지 여부
+   * - completedAt: 최초 완료 시각
+   */
+  private async markChallengeCompletedIfNeeded(
+    userId: number,
+    challengeId: number,
+    participationId: number,
+    existingCompletedAt: string | null,
+  ) {
+    /*
+     * 이미 과거에 한 번이라도 Challenge를 완료했다면
+     * 현재 Mission 구성이 달라졌더라도 완료 기록을 다시 계산하거나
+     * completedAt을 덮어쓰지 않는다.
+     */
+    if (existingCompletedAt) {
+      return {
+        completed: true,
+        justCompleted: false,
+        completedAt: existingCompletedAt,
+      };
+    }
+
+    const missions = await db.orm.public.Mission.where({
+      challengeId,
+    }).all();
+
+    const activeMissions = missions.filter(
+      (mission) => mission.status === 'ACTIVE',
+    );
+
+    /*
+     * ACTIVE Mission이 하나도 없는 Challenge는
+     * 완료로 처리하지 않는다.
+     */
+    if (activeMissions.length === 0) {
+      return {
+        completed: false,
+        justCompleted: false,
+        completedAt: null,
+      };
+    }
+
+    const userCompletions = await db.orm.public.MissionCompletion.where({
+      userId,
+    }).all();
+
+    const completedMissionIds = new Set(
+      userCompletions.map((completion) => completion.missionId),
+    );
+
+    const completedAllActiveMissions = activeMissions.every((mission) =>
+      completedMissionIds.has(mission.id),
+    );
+
+    if (!completedAllActiveMissions) {
+      return {
+        completed: false,
+        justCompleted: false,
+        completedAt: null,
+      };
+    }
+
+    const completedAt = new Date().toISOString();
+
+    const updatedParticipation =
+      await db.orm.public.ChallengeParticipation.where({
+        id: participationId,
+      }).update({
+        completedAt,
+      });
+
+    if (!updatedParticipation) {
+      throw new NotFoundException('Challenge 참여 기록을 찾을 수 없습니다.');
+    }
+
+    return {
+      completed: true,
+      justCompleted: true,
+      completedAt,
+    };
+  }
+
+  /*
+   * USER가 Challenge를 최초 완주했을 때
+   * 현재 지급 중인 BadgeVersion으로 UserBadge를 생성한다.
+   *
+   * 중요한 정책:
+   *
+   * 1. justCompleted인 경우에만 이 메서드를 호출한다.
+   *    따라서 기존 완료자에게 자동으로 소급 지급하지 않는다.
+   *
+   * 2. 같은 USER + Challenge 조합은 한 번만 지급한다.
+   *
+   * 3. BadgeVersion은 새로 만들지 않는다.
+   *    Challenge.currentBadgeVersionId가 가리키는
+   *    현재 지급 중인 버전을 그대로 보존한다.
+   *
+   * 4. completedAt은 ChallengeParticipation의
+   *    최초 완료 시각과 동일한 값을 저장한다.
+   */
+  private async awardChallengeBadgeIfNeeded(
+    userId: number,
+    challengeId: number,
+    currentBadgeVersionId: number | null,
+    completedAt: string,
+  ) {
+    /*
+     * 혹시 이미 같은 Challenge의 배지를 가지고 있다면
+     * 중복 생성하지 않는다.
+     *
+     * DB의 @@unique([userId, challengeId])와 함께
+     * 이중으로 중복 지급을 방지한다.
+     */
+    const existingUserBadge = await db.orm.public.UserBadge.first({
+      userId,
+      challengeId,
+    });
+
+    if (existingUserBadge) {
+      return {
+        awarded: false,
+        userBadge: existingUserBadge,
+      };
+    }
+
+    /*
+     * 현재 Challenge에 지급 중인 BadgeVersion이 없다면
+     * Mission 완료와 Challenge 완료 자체는 그대로 유지하고
+     * 배지만 생성하지 않는다.
+     *
+     * 정상적인 ACTIVE Challenge라면
+     * 운영 시작/재개 시 currentBadgeVersionId가
+     * 이미 설정되어 있어야 한다.
+     */
+    if (currentBadgeVersionId === null) {
+      return {
+        awarded: false,
+        userBadge: null,
+      };
+    }
+
+    /*
+     * currentBadgeVersionId가 실제로 존재하며
+     * 해당 Challenge의 BadgeVersion인지 한 번 더 확인한다.
+     */
+    const badgeVersion = await db.orm.public.BadgeVersion.first({
+      id: currentBadgeVersionId,
+    });
+
+    if (!badgeVersion || badgeVersion.challengeId !== challengeId) {
+      return {
+        awarded: false,
+        userBadge: null,
+      };
+    }
+
+    /*
+     * Challenge를 최초 완료한 시점의
+     * BadgeVersion을 사용자에게 영구 지급한다.
+     *
+     * 이후 기관이 Mission이나 배지 디자인을 변경하여
+     * 새로운 BadgeVersion을 만들어도
+     * 이 사용자의 badgeVersionId는 변경하지 않는다.
+     */
+    const userBadge = await db.orm.public.UserBadge.create({
+      userId,
+      challengeId,
+      badgeVersionId: badgeVersion.id,
+      completedAt,
+    });
+
+    return {
+      awarded: true,
+      userBadge,
     };
   }
 

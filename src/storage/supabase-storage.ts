@@ -21,6 +21,11 @@ export type ProofUploadFile = StorageUploadFile;
 export type ChallengeCoverUploadFile = StorageUploadFile;
 
 /*
+ * Challenge 완료 배지 중앙 이미지 업로드용 타입
+ */
+export type BadgeCenterImageUploadFile = StorageUploadFile;
+
+/*
  * Mission 관광지 대표사진 업로드용 타입
  */
 export type MissionPhotoUploadFile = StorageUploadFile;
@@ -42,6 +47,12 @@ export const MAX_APPLICATION_PROOF_TOTAL_SIZE = 300 * 1024 * 1024;
  * 한 장당 최대 10MB로 제한한다.
  */
 export const MAX_CHALLENGE_COVER_FILE_SIZE = 10 * 1024 * 1024;
+
+/*
+ * Challenge 완료 배지 중앙 이미지도
+ * 한 장당 최대 10MB로 제한한다.
+ */
+export const MAX_BADGE_CENTER_IMAGE_FILE_SIZE = 10 * 1024 * 1024;
 
 /*
  * Mission 관광지 대표사진도
@@ -77,12 +88,20 @@ const ALLOWED_CHALLENGE_COVER_MIME_TYPES = new Set([
 ]);
 
 /*
- * Mission 관광지 대표사진에서 허용하는 MIME 타입
+ * Challenge 완료 배지 중앙 이미지에서
+ * 허용하는 MIME 타입
  *
- * Challenge 대표사진과 동일하게
+ * SVG는 업로드 대상에서 제외하고
  * JPG / JPEG / PNG / WEBP만 허용한다.
- *
- * SVG는 업로드 대상에서 제외한다.
+ */
+const ALLOWED_BADGE_CENTER_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+
+/*
+ * Mission 관광지 대표사진에서 허용하는 MIME 타입
  */
 const ALLOWED_MISSION_PHOTO_MIME_TYPES = new Set([
   'image/jpeg',
@@ -92,9 +111,6 @@ const ALLOWED_MISSION_PHOTO_MIME_TYPES = new Set([
 
 /*
  * USER Mission 완료사진에서 허용하는 MIME 타입
- *
- * Mission 대표사진과 동일하게
- * JPG / JPEG / PNG / WEBP만 허용한다.
  */
 const ALLOWED_MISSION_COMPLETION_PHOTO_MIME_TYPES = new Set([
   'image/jpeg',
@@ -257,14 +273,6 @@ export function validateProofFile(file: ProofUploadFile) {
     throw new Error('증빙자료 한 개의 최대 크기는 50MB입니다.');
   }
 
-  /*
-   * MIME 타입만 믿지 않고
-   * 실제 파일 시작 바이트도 검사한다.
-   *
-   * 예:
-   * exe 파일 이름만 test.pdf로 바꾸는 식의
-   * 단순 위장 업로드를 추가로 차단한다.
-   */
   if (!hasValidFileSignature(file)) {
     throw new Error('파일 내용과 파일 형식이 일치하지 않습니다.');
   }
@@ -294,10 +302,35 @@ export function validateChallengeCoverFile(file: ChallengeCoverUploadFile) {
     throw new Error('Challenge 대표사진의 최대 크기는 10MB입니다.');
   }
 
-  /*
-   * 확장자나 MIME 값만 검사하지 않고
-   * 실제 파일 Signature도 함께 검사한다.
-   */
+  if (!hasValidFileSignature(file)) {
+    throw new Error('이미지 내용과 파일 형식이 일치하지 않습니다.');
+  }
+}
+
+/*
+ * Challenge 완료 배지 중앙 이미지 검증
+ *
+ * 허용:
+ * JPG / JPEG / PNG / WEBP
+ *
+ * 최대:
+ * 10MB
+ */
+export function validateBadgeCenterImageFile(file: BadgeCenterImageUploadFile) {
+  if (!ALLOWED_BADGE_CENTER_IMAGE_MIME_TYPES.has(file.mimetype)) {
+    throw new Error(
+      '완료 배지 이미지는 JPG, JPEG, PNG, WEBP 파일만 업로드할 수 있습니다.',
+    );
+  }
+
+  if (file.size <= 0) {
+    throw new Error('비어 있는 이미지는 업로드할 수 없습니다.');
+  }
+
+  if (file.size > MAX_BADGE_CENTER_IMAGE_FILE_SIZE) {
+    throw new Error('완료 배지 이미지의 최대 크기는 10MB입니다.');
+  }
+
   if (!hasValidFileSignature(file)) {
     throw new Error('이미지 내용과 파일 형식이 일치하지 않습니다.');
   }
@@ -305,12 +338,6 @@ export function validateChallengeCoverFile(file: ChallengeCoverUploadFile) {
 
 /*
  * Mission 관광지 대표사진 검증
- *
- * 허용:
- * JPG / JPEG / PNG / WEBP
- *
- * 최대:
- * 10MB
  */
 export function validateMissionPhotoFile(file: MissionPhotoUploadFile) {
   if (!ALLOWED_MISSION_PHOTO_MIME_TYPES.has(file.mimetype)) {
@@ -327,10 +354,6 @@ export function validateMissionPhotoFile(file: MissionPhotoUploadFile) {
     throw new Error('Mission 대표사진의 최대 크기는 10MB입니다.');
   }
 
-  /*
-   * 확장자나 MIME 값만 검사하지 않고
-   * 실제 파일 Signature도 함께 검사한다.
-   */
   if (!hasValidFileSignature(file)) {
     throw new Error('이미지 내용과 파일 형식이 일치하지 않습니다.');
   }
@@ -338,12 +361,6 @@ export function validateMissionPhotoFile(file: MissionPhotoUploadFile) {
 
 /*
  * USER Mission 완료사진 검증
- *
- * 허용:
- * JPG / JPEG / PNG / WEBP
- *
- * 최대:
- * 10MB
  */
 export function validateMissionCompletionPhotoFile(
   file: MissionCompletionPhotoUploadFile,
@@ -362,10 +379,6 @@ export function validateMissionCompletionPhotoFile(
     throw new Error('Mission 완료사진의 최대 크기는 10MB입니다.');
   }
 
-  /*
-   * MIME 타입뿐만 아니라
-   * 실제 파일 Signature도 함께 검사한다.
-   */
   if (!hasValidFileSignature(file)) {
     throw new Error('이미지 내용과 파일 형식이 일치하지 않습니다.');
   }
@@ -381,17 +394,9 @@ export async function uploadInstitutionProof(
   validateProofFile(file);
 
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
-
   const extension = getExtension(file.mimetype);
 
-  /*
-   * InstitutionApplication.id를 기준으로 저장한다.
-   *
-   * 예:
-   * applications/15/uuid.pdf
-   */
   const fileKey =
     `applications/${applicationId}/` + `${randomUUID()}.${extension}`;
 
@@ -399,9 +404,7 @@ export async function uploadInstitutionProof(
     .from(bucket)
     .upload(fileKey, file.buffer, {
       contentType: file.mimetype,
-
       upsert: false,
-
       cacheControl: '3600',
     });
 
@@ -417,7 +420,6 @@ export async function uploadInstitutionProof(
  */
 export async function deleteInstitutionProof(fileKey: string) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { error } = await supabase.storage.from(bucket).remove([fileKey]);
@@ -435,7 +437,6 @@ export async function createInstitutionProofSignedUrl(
   expiresInSeconds = 2400,
 ) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { data, error } = await supabase.storage
@@ -456,9 +457,6 @@ export async function createInstitutionProofSignedUrl(
 /*
  * Challenge 대표사진 업로드
  *
- * DB에는 이미지 자체가 아니라
- * 반환되는 fileKey만 저장한다.
- *
  * 예:
  * challenge-covers/15/uuid.jpg
  */
@@ -469,18 +467,9 @@ export async function uploadChallengeCover(
   validateChallengeCoverFile(file);
 
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
-
   const extension = getExtension(file.mimetype);
 
-  /*
-   * 사용자가 올린 원본 파일명을
-   * Storage key로 사용하지 않는다.
-   *
-   * UUID를 사용해서
-   * 파일명 충돌과 경로 조작 가능성을 줄인다.
-   */
   const fileKey =
     `challenge-covers/${challengeId}/` + `${randomUUID()}.${extension}`;
 
@@ -488,9 +477,7 @@ export async function uploadChallengeCover(
     .from(bucket)
     .upload(fileKey, file.buffer, {
       contentType: file.mimetype,
-
       upsert: false,
-
       cacheControl: '3600',
     });
 
@@ -508,7 +495,6 @@ export async function uploadChallengeCover(
  */
 export async function deleteChallengeCover(fileKey: string) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { error } = await supabase.storage.from(bucket).remove([fileKey]);
@@ -520,19 +506,12 @@ export async function deleteChallengeCover(fileKey: string) {
 
 /*
  * Challenge 대표사진 표시용 Signed URL
- *
- * 현재 Storage bucket은 private 방식으로 유지하고
- * 사용자에게 Storage key 자체를 직접 사용하게 하지 않는다.
- *
- * 기본 유효시간:
- * 1시간
  */
 export async function createChallengeCoverSignedUrl(
   fileKey: string,
   expiresInSeconds = 3600,
 ) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { data, error } = await supabase.storage
@@ -551,10 +530,90 @@ export async function createChallengeCoverSignedUrl(
 }
 
 /*
- * Mission 관광지 대표사진 업로드
+ * Challenge 완료 배지 중앙 이미지 업로드
  *
- * DB에는 이미지 자체가 아니라
- * 반환되는 fileKey만 저장한다.
+ * 예:
+ * challenge-badges/15/uuid.jpg
+ *
+ * Challenge.id를 기준으로 경로를 분리하고
+ * 실제 파일명은 UUID를 사용한다.
+ */
+export async function uploadBadgeCenterImage(
+  challengeId: number,
+  file: BadgeCenterImageUploadFile,
+) {
+  validateBadgeCenterImageFile(file);
+
+  const supabase = getSupabaseClient();
+  const bucket = getBucketName();
+  const extension = getExtension(file.mimetype);
+
+  const fileKey =
+    `challenge-badges/${challengeId}/` + `${randomUUID()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileKey, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+      cacheControl: '3600',
+    });
+
+  if (error) {
+    throw new Error(`완료 배지 이미지 업로드에 실패했습니다: ${error.message}`);
+  }
+
+  return fileKey;
+}
+
+/*
+ * Challenge 완료 배지 중앙 이미지 삭제
+ *
+ * 실제로 삭제해도 되는지 여부는
+ * ChallengesService에서 과거 BadgeVersion 참조 여부를
+ * 먼저 검사한 뒤 결정한다.
+ */
+export async function deleteBadgeCenterImage(fileKey: string) {
+  const supabase = getSupabaseClient();
+  const bucket = getBucketName();
+
+  const { error } = await supabase.storage.from(bucket).remove([fileKey]);
+
+  if (error) {
+    throw new Error(`완료 배지 이미지 삭제에 실패했습니다: ${error.message}`);
+  }
+}
+
+/*
+ * Challenge 완료 배지 중앙 이미지 표시용 Signed URL
+ *
+ * private Storage이므로 원본 key 대신
+ * Signed URL을 사용한다.
+ */
+export async function createBadgeCenterImageSignedUrl(
+  fileKey: string,
+  expiresInSeconds = 3600,
+) {
+  const supabase = getSupabaseClient();
+  const bucket = getBucketName();
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(fileKey, expiresInSeconds);
+
+  if (error || !data?.signedUrl) {
+    throw new Error(
+      `완료 배지 이미지 URL 생성에 실패했습니다: ${
+        error?.message ?? '알 수 없는 오류'
+      }`,
+    );
+  }
+
+  return data.signedUrl;
+}
+
+/*
+ * Mission 관광지 대표사진 업로드
  *
  * 예:
  * mission-photos/25/uuid.jpg
@@ -566,17 +625,9 @@ export async function uploadMissionPhoto(
   validateMissionPhotoFile(file);
 
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
-
   const extension = getExtension(file.mimetype);
 
-  /*
-   * Mission.id를 디렉터리 구분값으로 사용하고
-   * 실제 파일명은 UUID를 사용한다.
-   *
-   * 원본 파일명을 Storage key에 포함하지 않는다.
-   */
   const fileKey =
     `mission-photos/${missionId}/` + `${randomUUID()}.${extension}`;
 
@@ -584,9 +635,7 @@ export async function uploadMissionPhoto(
     .from(bucket)
     .upload(fileKey, file.buffer, {
       contentType: file.mimetype,
-
       upsert: false,
-
       cacheControl: '3600',
     });
 
@@ -602,7 +651,6 @@ export async function uploadMissionPhoto(
  */
 export async function deleteMissionPhoto(fileKey: string) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { error } = await supabase.storage.from(bucket).remove([fileKey]);
@@ -614,20 +662,12 @@ export async function deleteMissionPhoto(fileKey: string) {
 
 /*
  * Mission 관광지 대표사진 표시용 Signed URL
- *
- * Storage bucket은 private 상태로 유지하고,
- * API 응답에서는 Storage key 대신
- * 짧은 유효시간의 Signed URL을 사용한다.
- *
- * 기본 유효시간:
- * 1시간
  */
 export async function createMissionPhotoSignedUrl(
   fileKey: string,
   expiresInSeconds = 3600,
 ) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { data, error } = await supabase.storage
@@ -648,14 +688,8 @@ export async function createMissionPhotoSignedUrl(
 /*
  * USER Mission 완료사진 업로드
  *
- * MissionCompletion.id를 기준으로
- * Storage 경로를 분리한다.
- *
  * 예:
  * mission-completion-photos/35/uuid.jpg
- *
- * DB에는 실제 이미지가 아니라
- * 반환되는 fileKey만 저장한다.
  */
 export async function uploadMissionCompletionPhoto(
   completionId: number,
@@ -664,15 +698,9 @@ export async function uploadMissionCompletionPhoto(
   validateMissionCompletionPhotoFile(file);
 
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
-
   const extension = getExtension(file.mimetype);
 
-  /*
-   * 사용자 원본 파일명은 Storage key에 넣지 않고
-   * UUID 파일명을 사용한다.
-   */
   const fileKey =
     `mission-completion-photos/${completionId}/` +
     `${randomUUID()}.${extension}`;
@@ -681,9 +709,7 @@ export async function uploadMissionCompletionPhoto(
     .from(bucket)
     .upload(fileKey, file.buffer, {
       contentType: file.mimetype,
-
       upsert: false,
-
       cacheControl: '3600',
     });
 
@@ -699,7 +725,6 @@ export async function uploadMissionCompletionPhoto(
  */
 export async function deleteMissionCompletionPhoto(fileKey: string) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { error } = await supabase.storage.from(bucket).remove([fileKey]);
@@ -711,19 +736,12 @@ export async function deleteMissionCompletionPhoto(fileKey: string) {
 
 /*
  * USER Mission 완료사진 표시용 Signed URL
- *
- * Storage bucket은 private 상태로 유지하며,
- * 클라이언트에는 Storage key를 직접 노출하지 않는다.
- *
- * 기본 유효시간:
- * 1시간
  */
 export async function createMissionCompletionPhotoSignedUrl(
   fileKey: string,
   expiresInSeconds = 3600,
 ) {
   const supabase = getSupabaseClient();
-
   const bucket = getBucketName();
 
   const { data, error } = await supabase.storage

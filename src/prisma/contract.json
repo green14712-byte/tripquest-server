@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "badge_versions": {
+      "model": "BadgeVersion",
+      "namespace": "public"
+    },
     "challenge_participations": {
       "model": "ChallengeParticipation",
       "namespace": "public"
@@ -40,6 +44,10 @@
       "model": "PasswordReset",
       "namespace": "public"
     },
+    "user_badges": {
+      "model": "UserBadge",
+      "namespace": "public"
+    },
     "users": {
       "model": "User",
       "namespace": "public"
@@ -63,6 +71,65 @@
               {
                 "name": "DELETED",
                 "value": "DELETED"
+              }
+            ]
+          },
+          "BadgeCenterType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "IMAGE",
+                "value": "IMAGE"
+              },
+              {
+                "name": "ICON",
+                "value": "ICON"
+              }
+            ]
+          },
+          "BadgeShape": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "CIRCLE",
+                "value": "CIRCLE"
+              },
+              {
+                "name": "TRIANGLE",
+                "value": "TRIANGLE"
+              },
+              {
+                "name": "DIAMOND",
+                "value": "DIAMOND"
+              },
+              {
+                "name": "PENTAGON",
+                "value": "PENTAGON"
+              },
+              {
+                "name": "HEXAGON",
+                "value": "HEXAGON"
+              },
+              {
+                "name": "SHIELD",
+                "value": "SHIELD"
+              }
+            ]
+          },
+          "ChallengeRouteMode": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "WALKING",
+                "value": "WALKING"
+              },
+              {
+                "name": "CYCLING",
+                "value": "CYCLING"
+              },
+              {
+                "name": "DRIVING",
+                "value": "DRIVING"
               }
             ]
           },
@@ -157,8 +224,308 @@
           }
         },
         "models": {
+          "BadgeVersion": {
+            "fields": {
+              "borderColor": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "centerImageKey": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "centerType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BadgeCenterType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "challengeId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "difficulty": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "icon": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "imagePositionX": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "imagePositionY": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "imageScale": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "missionCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "shape": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BadgeShape",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "version": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "challenge": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "challengeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Challenge",
+                  "namespace": "public"
+                }
+              },
+              "currentForChallenge": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "currentBadgeVersionId"
+                  ]
+                },
+                "to": {
+                  "model": "Challenge",
+                  "namespace": "public"
+                }
+              },
+              "userBadges": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "badgeVersionId"
+                  ]
+                },
+                "to": {
+                  "model": "UserBadge",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "borderColor": {
+                  "column": "borderColor"
+                },
+                "centerImageKey": {
+                  "column": "centerImageKey"
+                },
+                "centerType": {
+                  "column": "centerType"
+                },
+                "challengeId": {
+                  "column": "challengeId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "difficulty": {
+                  "column": "difficulty"
+                },
+                "icon": {
+                  "column": "icon"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "imagePositionX": {
+                  "column": "imagePositionX"
+                },
+                "imagePositionY": {
+                  "column": "imagePositionY"
+                },
+                "imageScale": {
+                  "column": "imageScale"
+                },
+                "missionCount": {
+                  "column": "missionCount"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "shape": {
+                  "column": "shape"
+                },
+                "version": {
+                  "column": "version"
+                }
+              },
+              "namespaceId": "public",
+              "table": "badge_versions"
+            }
+          },
           "Challenge": {
             "fields": {
+              "badgeBorderColor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeCenterImageKey": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeCenterType": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BadgeCenterType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "badgeDescription": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeIcon": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeImagePositionX": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeImagePositionY": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeImageScale": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "badgeName": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "coverImageKey": {
                 "nullable": true,
                 "type": {
@@ -187,10 +554,24 @@
                   "kind": "scalar"
                 }
               },
+              "currentBadgeVersionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "description": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "difficulty": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -220,6 +601,19 @@
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
+                }
+              },
+              "routeMode": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ChallengeRouteMode",
+                  "namespaceId": "public",
+                  "plane": "domain"
                 }
               },
               "startAt": {
@@ -258,6 +652,37 @@
               }
             },
             "relations": {
+              "badgeVersions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "challengeId"
+                  ]
+                },
+                "to": {
+                  "model": "BadgeVersion",
+                  "namespace": "public"
+                }
+              },
+              "currentBadgeVersion": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "currentBadgeVersionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BadgeVersion",
+                  "namespace": "public"
+                }
+              },
               "institution": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -303,10 +728,52 @@
                   "model": "ChallengeParticipation",
                   "namespace": "public"
                 }
+              },
+              "userBadges": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "challengeId"
+                  ]
+                },
+                "to": {
+                  "model": "UserBadge",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
               "fields": {
+                "badgeBorderColor": {
+                  "column": "badgeBorderColor"
+                },
+                "badgeCenterImageKey": {
+                  "column": "badgeCenterImageKey"
+                },
+                "badgeCenterType": {
+                  "column": "badgeCenterType"
+                },
+                "badgeDescription": {
+                  "column": "badgeDescription"
+                },
+                "badgeIcon": {
+                  "column": "badgeIcon"
+                },
+                "badgeImagePositionX": {
+                  "column": "badgeImagePositionX"
+                },
+                "badgeImagePositionY": {
+                  "column": "badgeImagePositionY"
+                },
+                "badgeImageScale": {
+                  "column": "badgeImageScale"
+                },
+                "badgeName": {
+                  "column": "badgeName"
+                },
                 "coverImageKey": {
                   "column": "coverImageKey"
                 },
@@ -319,8 +786,14 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
+                "currentBadgeVersionId": {
+                  "column": "currentBadgeVersionId"
+                },
                 "description": {
                   "column": "description"
+                },
+                "difficulty": {
+                  "column": "difficulty"
                 },
                 "endAt": {
                   "column": "endAt"
@@ -333,6 +806,9 @@
                 },
                 "region": {
                   "column": "region"
+                },
+                "routeMode": {
+                  "column": "routeMode"
                 },
                 "startAt": {
                   "column": "startAt"
@@ -357,6 +833,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "completedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -420,6 +903,9 @@
               "fields": {
                 "challengeId": {
                   "column": "challengeId"
+                },
+                "completedAt": {
+                  "column": "completedAt"
                 },
                 "id": {
                   "column": "id"
@@ -1627,6 +2113,21 @@
                   "model": "InstitutionApplication",
                   "namespace": "public"
                 }
+              },
+              "userBadges": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "UserBadge",
+                  "namespace": "public"
+                }
               }
             },
             "storage": {
@@ -1680,6 +2181,126 @@
               "namespaceId": "public",
               "table": "users"
             }
+          },
+          "UserBadge": {
+            "fields": {
+              "badgeVersionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "challengeId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "completedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "issuedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "badgeVersion": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "badgeVersionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BadgeVersion",
+                  "namespace": "public"
+                }
+              },
+              "challenge": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "challengeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Challenge",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "badgeVersionId": {
+                  "column": "badgeVersionId"
+                },
+                "challengeId": {
+                  "column": "challengeId"
+                },
+                "completedAt": {
+                  "column": "completedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "issuedAt": {
+                  "column": "issuedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "user_badges"
+            }
           }
         }
       }
@@ -1690,12 +2311,189 @@
       "public": {
         "entries": {
           "table": {
+            "badge_versions": {
+              "checks": [
+                {
+                  "expression": "\"centerType\" IN ('IMAGE', 'ICON')",
+                  "name": "badge_versions_centerType_check_b6357795",
+                  "prefix": "badge_versions_centerType_check"
+                },
+                {
+                  "expression": "\"shape\" IN ('CIRCLE', 'TRIANGLE', 'DIAMOND', 'PENTAGON', 'HEXAGON', 'SHIELD')",
+                  "name": "badge_versions_shape_check_cfa41626",
+                  "prefix": "badge_versions_shape_check"
+                }
+              ],
+              "columns": {
+                "borderColor": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "centerImageKey": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "centerType": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BadgeCenterType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "challengeId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "difficulty": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "icon": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "imagePositionX": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 50
+                  },
+                  "nullable": false
+                },
+                "imagePositionY": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 50
+                  },
+                  "nullable": false
+                },
+                "imageScale": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 100
+                  },
+                  "nullable": false
+                },
+                "missionCount": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "shape": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BadgeShape",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "version": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "badge_versions_challengeId_idx_73b8115d"
+                  },
+                  "source": {
+                    "columns": [
+                      "challengeId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "badge_versions"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenges"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "challengeId"
+                  ],
+                  "name": "badge_versions_challengeId_idx_73b8115d",
+                  "prefix": "badge_versions_challengeId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "challengeId",
+                    "version"
+                  ]
+                }
+              ]
+            },
             "challenge_participations": {
               "columns": {
                 "challengeId": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
                   "nullable": false
+                },
+                "completedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": true
                 },
                 "id": {
                   "codecId": "pg/int4@1",
@@ -1796,12 +2594,85 @@
             "challenges": {
               "checks": [
                 {
+                  "expression": "\"badgeCenterType\" IN ('IMAGE', 'ICON')",
+                  "name": "challenges_badgeCenterType_check_db05ede8",
+                  "prefix": "challenges_badgeCenterType_check"
+                },
+                {
+                  "expression": "\"routeMode\" IN ('WALKING', 'CYCLING', 'DRIVING')",
+                  "name": "challenges_routeMode_check_95e5293e",
+                  "prefix": "challenges_routeMode_check"
+                },
+                {
                   "expression": "\"status\" IN ('DRAFT', 'ACTIVE', 'PAUSED', 'ENDED', 'ARCHIVED')",
                   "name": "challenges_status_check_aba8b6a8",
                   "prefix": "challenges_status_check"
                 }
               ],
               "columns": {
+                "badgeBorderColor": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "badgeCenterImageKey": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "badgeCenterType": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BadgeCenterType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "badgeDescription": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "badgeIcon": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "badgeImagePositionX": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 50
+                  },
+                  "nullable": false
+                },
+                "badgeImagePositionY": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 50
+                  },
+                  "nullable": false
+                },
+                "badgeImageScale": {
+                  "codecId": "pg/float8@1",
+                  "dataType": "pg/float8",
+                  "default": {
+                    "kind": "literal",
+                    "value": 100
+                  },
+                  "nullable": false
+                },
+                "badgeName": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "coverImageKey": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -1834,9 +2705,19 @@
                   },
                   "nullable": false
                 },
+                "currentBadgeVersionId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
+                },
                 "description": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
+                  "nullable": true
+                },
+                "difficulty": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "nullable": true
                 },
                 "endAt": {
@@ -1862,6 +2743,21 @@
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": true
+                },
+                "routeMode": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "WALKING"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ChallengeRouteMode",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "startAt": {
                   "codecId": "pg/timestamptz-string@1",
@@ -1897,6 +2793,27 @@
               "foreignKeys": [
                 {
                   "index": {
+                    "unique": [
+                      "currentBadgeVersionId"
+                    ]
+                  },
+                  "source": {
+                    "columns": [
+                      "currentBadgeVersionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenges"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "badge_versions"
+                  }
+                },
+                {
+                  "index": {
                     "name": "challenges_institutionId_idx_bab0e331"
                   },
                   "source": {
@@ -1930,7 +2847,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "currentBadgeVersionId"
+                  ]
+                }
+              ]
             },
             "email_verifications": {
               "columns": {
@@ -2724,6 +3647,146 @@
                 }
               ]
             },
+            "user_badges": {
+              "columns": {
+                "badgeVersionId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "challengeId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "completedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "issuedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "user_badges_userId_idx_a489d58a"
+                  },
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user_badges"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "users"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "user_badges_challengeId_idx_73b8115d"
+                  },
+                  "source": {
+                    "columns": [
+                      "challengeId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user_badges"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenges"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "user_badges_badgeVersionId_idx_84875d7a"
+                  },
+                  "source": {
+                    "columns": [
+                      "badgeVersionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user_badges"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "badge_versions"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "badgeVersionId"
+                  ],
+                  "name": "user_badges_badgeVersionId_idx_84875d7a",
+                  "prefix": "user_badges_badgeVersionId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "challengeId"
+                  ],
+                  "name": "user_badges_challengeId_idx_73b8115d",
+                  "prefix": "user_badges_challengeId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "user_badges_userId_idx_a489d58a",
+                  "prefix": "user_badges_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "userId",
+                    "challengeId"
+                  ]
+                }
+              ]
+            },
             "users": {
               "checks": [
                 {
@@ -2905,6 +3968,32 @@
                 "DELETED"
               ]
             },
+            "BadgeCenterType": {
+              "kind": "valueSet",
+              "values": [
+                "IMAGE",
+                "ICON"
+              ]
+            },
+            "BadgeShape": {
+              "kind": "valueSet",
+              "values": [
+                "CIRCLE",
+                "TRIANGLE",
+                "DIAMOND",
+                "PENTAGON",
+                "HEXAGON",
+                "SHIELD"
+              ]
+            },
+            "ChallengeRouteMode": {
+              "kind": "valueSet",
+              "values": [
+                "WALKING",
+                "CYCLING",
+                "DRIVING"
+              ]
+            },
             "ChallengeStatus": {
               "kind": "valueSet",
               "values": [
@@ -2952,7 +4041,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4eb8a1b5b16050608fef084b5ff563db60f5cb64da74407923f38acb98a67f8c"
+    "storageHash": "e6dd16de69c7c985ae99ef28e59360940997e26de817e942ccc9663b313508b2"
   },
   "execution": {
     "executionHash": "da7e4e82504f21dce733cb4e8da993bf77c11275547dddd7a496e1456fbac450",

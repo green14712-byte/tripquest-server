@@ -23,7 +23,9 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 
 import {
+  MAX_BADGE_CENTER_IMAGE_FILE_SIZE,
   MAX_CHALLENGE_COVER_FILE_SIZE,
+  type BadgeCenterImageUploadFile,
   type ChallengeCoverUploadFile,
 } from '../storage/supabase-storage';
 
@@ -112,12 +114,6 @@ export class ChallengesController {
   /*
    * INSTITUTION:
    * Challenge 생성
-   *
-   * JSON 요청도 그대로 지원한다.
-   *
-   * 대표사진을 함께 등록하는 경우에는
-   * multipart/form-data를 사용하고
-   * 파일 필드명은 coverImage를 사용한다.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('INSTITUTION')
@@ -178,9 +174,6 @@ export class ChallengesController {
   /*
    * INSTITUTION:
    * Challenge 대표사진 등록 또는 교체
-   *
-   * multipart/form-data
-   * coverImage = 이미지 파일
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('INSTITUTION')
@@ -240,6 +233,77 @@ export class ChallengesController {
     }
 
     return this.challengesService.removeCover(challengeId, institutionId);
+  }
+
+  /*
+   * INSTITUTION:
+   * 완료 배지 중앙 이미지 등록 또는 교체
+   *
+   * multipart/form-data
+   *
+   * badgeImage = 이미지 파일
+   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('INSTITUTION')
+  @UseInterceptors(
+    FileInterceptor('badgeImage', {
+      limits: {
+        fileSize: MAX_BADGE_CENTER_IMAGE_FILE_SIZE,
+      },
+    }),
+  )
+  @Post(':id/badge-image')
+  replaceBadgeCenterImage(
+    @Param('id', ParseIntPipe)
+    challengeId: number,
+
+    @Req()
+    request: AuthenticatedRequest,
+
+    @UploadedFile()
+    badgeImage?: BadgeCenterImageUploadFile,
+  ) {
+    const institutionId = request.user.institutionId;
+
+    if (institutionId === null) {
+      throw new ForbiddenException(
+        '기관과 연결된 계정만 완료 배지 이미지를 수정할 수 있습니다.',
+      );
+    }
+
+    return this.challengesService.replaceBadgeCenterImage(
+      challengeId,
+      institutionId,
+      badgeImage,
+    );
+  }
+
+  /*
+   * INSTITUTION:
+   * 완료 배지 중앙 이미지 삭제
+   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('INSTITUTION')
+  @Delete(':id/badge-image')
+  removeBadgeCenterImage(
+    @Param('id', ParseIntPipe)
+    challengeId: number,
+
+    @Req()
+    request: AuthenticatedRequest,
+  ) {
+    const institutionId = request.user.institutionId;
+
+    if (institutionId === null) {
+      throw new ForbiddenException(
+        '기관과 연결된 계정만 완료 배지 이미지를 삭제할 수 있습니다.',
+      );
+    }
+
+    return this.challengesService.removeBadgeCenterImage(
+      challengeId,
+      institutionId,
+    );
   }
 
   // INSTITUTION: 최초 운영 시작

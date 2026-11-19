@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'4eb8a1b5b16050608fef084b5ff563db60f5cb64da74407923f38acb98a67f8c'>;
+  StorageHashBase<'e6dd16de69c7c985ae99ef28e59360940997e26de817e942ccc9663b313508b2'>;
 export type ExecutionHash =
   ExecutionHashBase<'da7e4e82504f21dce733cb4e8da993bf77c11275547dddd7a496e1456fbac450'>;
 export type ProfileHash =
@@ -234,16 +234,46 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly BadgeVersion: {
+      readonly borderColor: CodecTypes['pg/text@1']['output'];
+      readonly centerImageKey: CodecTypes['pg/text@1']['output'] | null;
+      readonly centerType: 'IMAGE' | 'ICON';
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['output'];
+      readonly icon: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly imagePositionX: CodecTypes['pg/float8@1']['output'];
+      readonly imagePositionY: CodecTypes['pg/float8@1']['output'];
+      readonly imageScale: CodecTypes['pg/float8@1']['output'];
+      readonly missionCount: CodecTypes['pg/int4@1']['output'];
+      readonly name: CodecTypes['pg/text@1']['output'];
+      readonly shape: 'CIRCLE' | 'TRIANGLE' | 'DIAMOND' | 'PENTAGON' | 'HEXAGON' | 'SHIELD';
+      readonly version: CodecTypes['pg/int4@1']['output'];
+    };
     readonly Challenge: {
+      readonly badgeBorderColor: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeCenterImageKey: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeCenterType: 'IMAGE' | 'ICON' | null;
+      readonly badgeDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeIcon: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeImagePositionX: CodecTypes['pg/float8@1']['output'];
+      readonly badgeImagePositionY: CodecTypes['pg/float8@1']['output'];
+      readonly badgeImageScale: CodecTypes['pg/float8@1']['output'];
+      readonly badgeName: CodecTypes['pg/text@1']['output'] | null;
       readonly coverImageKey: CodecTypes['pg/text@1']['output'] | null;
       readonly coverPositionX: CodecTypes['pg/float8@1']['output'];
       readonly coverPositionY: CodecTypes['pg/float8@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly currentBadgeVersionId: CodecTypes['pg/int4@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['output'] | null;
       readonly endAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly institutionId: CodecTypes['pg/int4@1']['output'];
       readonly region: CodecTypes['pg/text@1']['output'] | null;
+      readonly routeMode: 'WALKING' | 'CYCLING' | 'DRIVING';
       readonly startAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'ARCHIVED';
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -251,6 +281,7 @@ export type FieldOutputTypes = {
     };
     readonly ChallengeParticipation: {
       readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
@@ -360,20 +391,58 @@ export type FieldOutputTypes = {
       readonly suspensionReason: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly UserBadge: {
+      readonly badgeVersionId: CodecTypes['pg/int4@1']['output'];
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
   };
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly BadgeVersion: {
+      readonly borderColor: CodecTypes['pg/text@1']['input'];
+      readonly centerImageKey: CodecTypes['pg/text@1']['input'] | null;
+      readonly centerType: 'IMAGE' | 'ICON';
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['input'];
+      readonly icon: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly imagePositionX: CodecTypes['pg/float8@1']['input'];
+      readonly imagePositionY: CodecTypes['pg/float8@1']['input'];
+      readonly imageScale: CodecTypes['pg/float8@1']['input'];
+      readonly missionCount: CodecTypes['pg/int4@1']['input'];
+      readonly name: CodecTypes['pg/text@1']['input'];
+      readonly shape: 'CIRCLE' | 'TRIANGLE' | 'DIAMOND' | 'PENTAGON' | 'HEXAGON' | 'SHIELD';
+      readonly version: CodecTypes['pg/int4@1']['input'];
+    };
     readonly Challenge: {
+      readonly badgeBorderColor: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeCenterImageKey: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeCenterType: 'IMAGE' | 'ICON' | null;
+      readonly badgeDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeIcon: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeImagePositionX: CodecTypes['pg/float8@1']['input'];
+      readonly badgeImagePositionY: CodecTypes['pg/float8@1']['input'];
+      readonly badgeImageScale: CodecTypes['pg/float8@1']['input'];
+      readonly badgeName: CodecTypes['pg/text@1']['input'] | null;
       readonly coverImageKey: CodecTypes['pg/text@1']['input'] | null;
       readonly coverPositionX: CodecTypes['pg/float8@1']['input'];
       readonly coverPositionY: CodecTypes['pg/float8@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly currentBadgeVersionId: CodecTypes['pg/int4@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['input'] | null;
       readonly endAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly institutionId: CodecTypes['pg/int4@1']['input'];
       readonly region: CodecTypes['pg/text@1']['input'] | null;
+      readonly routeMode: 'WALKING' | 'CYCLING' | 'DRIVING';
       readonly startAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'ARCHIVED';
       readonly title: CodecTypes['pg/text@1']['input'];
@@ -381,6 +450,7 @@ export type FieldInputTypes = {
     };
     readonly ChallengeParticipation: {
       readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
@@ -490,26 +560,65 @@ export type FieldInputTypes = {
       readonly suspensionReason: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
+    readonly UserBadge: {
+      readonly badgeVersionId: CodecTypes['pg/int4@1']['input'];
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
   };
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly badge_versions: {
+      readonly borderColor: CodecTypes['pg/text@1']['output'];
+      readonly centerImageKey: CodecTypes['pg/text@1']['output'] | null;
+      readonly centerType: 'IMAGE' | 'ICON';
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['output'];
+      readonly icon: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly imagePositionX: CodecTypes['pg/float8@1']['output'];
+      readonly imagePositionY: CodecTypes['pg/float8@1']['output'];
+      readonly imageScale: CodecTypes['pg/float8@1']['output'];
+      readonly missionCount: CodecTypes['pg/int4@1']['output'];
+      readonly name: CodecTypes['pg/text@1']['output'];
+      readonly shape: 'CIRCLE' | 'TRIANGLE' | 'DIAMOND' | 'PENTAGON' | 'HEXAGON' | 'SHIELD';
+      readonly version: CodecTypes['pg/int4@1']['output'];
+    };
     readonly challenge_participations: {
       readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
     };
     readonly challenges: {
+      readonly badgeBorderColor: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeCenterImageKey: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeCenterType: 'IMAGE' | 'ICON' | null;
+      readonly badgeDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeIcon: CodecTypes['pg/text@1']['output'] | null;
+      readonly badgeImagePositionX: CodecTypes['pg/float8@1']['output'];
+      readonly badgeImagePositionY: CodecTypes['pg/float8@1']['output'];
+      readonly badgeImageScale: CodecTypes['pg/float8@1']['output'];
+      readonly badgeName: CodecTypes['pg/text@1']['output'] | null;
       readonly coverImageKey: CodecTypes['pg/text@1']['output'] | null;
       readonly coverPositionX: CodecTypes['pg/float8@1']['output'];
       readonly coverPositionY: CodecTypes['pg/float8@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly currentBadgeVersionId: CodecTypes['pg/int4@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['output'] | null;
       readonly endAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly institutionId: CodecTypes['pg/int4@1']['output'];
       readonly region: CodecTypes['pg/text@1']['output'] | null;
+      readonly routeMode: 'WALKING' | 'CYCLING' | 'DRIVING';
       readonly startAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'ARCHIVED';
       readonly title: CodecTypes['pg/text@1']['output'];
@@ -602,6 +711,14 @@ export type StorageColumnTypes = {
       readonly resetTokenHash: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly verifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
+    readonly user_badges: {
+      readonly badgeVersionId: CodecTypes['pg/int4@1']['output'];
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
     };
     readonly users: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -624,22 +741,53 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly badge_versions: {
+      readonly borderColor: CodecTypes['pg/text@1']['input'];
+      readonly centerImageKey: CodecTypes['pg/text@1']['input'] | null;
+      readonly centerType: 'IMAGE' | 'ICON';
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['input'];
+      readonly icon: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly imagePositionX: CodecTypes['pg/float8@1']['input'];
+      readonly imagePositionY: CodecTypes['pg/float8@1']['input'];
+      readonly imageScale: CodecTypes['pg/float8@1']['input'];
+      readonly missionCount: CodecTypes['pg/int4@1']['input'];
+      readonly name: CodecTypes['pg/text@1']['input'];
+      readonly shape: 'CIRCLE' | 'TRIANGLE' | 'DIAMOND' | 'PENTAGON' | 'HEXAGON' | 'SHIELD';
+      readonly version: CodecTypes['pg/int4@1']['input'];
+    };
     readonly challenge_participations: {
       readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
     };
     readonly challenges: {
+      readonly badgeBorderColor: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeCenterImageKey: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeCenterType: 'IMAGE' | 'ICON' | null;
+      readonly badgeDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeIcon: CodecTypes['pg/text@1']['input'] | null;
+      readonly badgeImagePositionX: CodecTypes['pg/float8@1']['input'];
+      readonly badgeImagePositionY: CodecTypes['pg/float8@1']['input'];
+      readonly badgeImageScale: CodecTypes['pg/float8@1']['input'];
+      readonly badgeName: CodecTypes['pg/text@1']['input'] | null;
       readonly coverImageKey: CodecTypes['pg/text@1']['input'] | null;
       readonly coverPositionX: CodecTypes['pg/float8@1']['input'];
       readonly coverPositionY: CodecTypes['pg/float8@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly currentBadgeVersionId: CodecTypes['pg/int4@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly difficulty: CodecTypes['pg/int4@1']['input'] | null;
       readonly endAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly institutionId: CodecTypes['pg/int4@1']['input'];
       readonly region: CodecTypes['pg/text@1']['input'] | null;
+      readonly routeMode: 'WALKING' | 'CYCLING' | 'DRIVING';
       readonly startAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'ARCHIVED';
       readonly title: CodecTypes['pg/text@1']['input'];
@@ -733,6 +881,14 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly verifiedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
+    readonly user_badges: {
+      readonly badgeVersionId: CodecTypes['pg/int4@1']['input'];
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly users: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly deletedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
@@ -754,27 +910,71 @@ export type StorageColumnInputTypes = {
 };
 
 export namespace Models {
+  export type public_BadgeVersion = {
+    borderColor: CodecTypes['pg/text@1']['output'];
+    centerImageKey: CodecTypes['pg/text@1']['output'] | null;
+    centerType: 'IMAGE' | 'ICON';
+    challengeId: CodecTypes['pg/int4@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    description: CodecTypes['pg/text@1']['output'] | null;
+    difficulty: CodecTypes['pg/int4@1']['output'];
+    icon: CodecTypes['pg/text@1']['output'] | null;
+    id: CodecTypes['pg/int4@1']['output'];
+    imagePositionX: CodecTypes['pg/float8@1']['output'];
+    imagePositionY: CodecTypes['pg/float8@1']['output'];
+    imageScale: CodecTypes['pg/float8@1']['output'];
+    missionCount: CodecTypes['pg/int4@1']['output'];
+    name: CodecTypes['pg/text@1']['output'];
+    shape: 'CIRCLE' | 'TRIANGLE' | 'DIAMOND' | 'PENTAGON' | 'HEXAGON' | 'SHIELD';
+    version: CodecTypes['pg/int4@1']['output'];
+    challenge: public_Challenge;
+    currentForChallenge: public_Challenge | null;
+    userBadges: public_UserBadge[];
+    readonly [RelationKeys]?: 'challenge' | 'currentForChallenge' | 'userBadges';
+  };
   export type public_Challenge = {
+    badgeBorderColor: CodecTypes['pg/text@1']['output'] | null;
+    badgeCenterImageKey: CodecTypes['pg/text@1']['output'] | null;
+    badgeCenterType: 'IMAGE' | 'ICON' | null;
+    badgeDescription: CodecTypes['pg/text@1']['output'] | null;
+    badgeIcon: CodecTypes['pg/text@1']['output'] | null;
+    badgeImagePositionX: CodecTypes['pg/float8@1']['output'];
+    badgeImagePositionY: CodecTypes['pg/float8@1']['output'];
+    badgeImageScale: CodecTypes['pg/float8@1']['output'];
+    badgeName: CodecTypes['pg/text@1']['output'] | null;
     coverImageKey: CodecTypes['pg/text@1']['output'] | null;
     coverPositionX: CodecTypes['pg/float8@1']['output'];
     coverPositionY: CodecTypes['pg/float8@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    currentBadgeVersionId: CodecTypes['pg/int4@1']['output'] | null;
     description: CodecTypes['pg/text@1']['output'] | null;
+    difficulty: CodecTypes['pg/int4@1']['output'] | null;
     endAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     id: CodecTypes['pg/int4@1']['output'];
     institutionId: CodecTypes['pg/int4@1']['output'];
     region: CodecTypes['pg/text@1']['output'] | null;
+    routeMode: 'WALKING' | 'CYCLING' | 'DRIVING';
     startAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'ARCHIVED';
     title: CodecTypes['pg/text@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    badgeVersions: public_BadgeVersion[];
+    currentBadgeVersion: public_BadgeVersion | null;
     institution: public_Institution;
     missions: public_Mission[];
     participations: public_ChallengeParticipation[];
-    readonly [RelationKeys]?: 'institution' | 'missions' | 'participations';
+    userBadges: public_UserBadge[];
+    readonly [RelationKeys]?:
+      | 'badgeVersions'
+      | 'currentBadgeVersion'
+      | 'institution'
+      | 'missions'
+      | 'participations'
+      | 'userBadges';
   };
   export type public_ChallengeParticipation = {
     challengeId: CodecTypes['pg/int4@1']['output'];
+    completedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     id: CodecTypes['pg/int4@1']['output'];
     joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     userId: CodecTypes['pg/int4@1']['output'];
@@ -908,17 +1108,32 @@ export namespace Models {
     missionCompletions: public_MissionCompletion[];
     participations: public_ChallengeParticipation[];
     reviewedInstitutionApplications: public_InstitutionApplication[];
+    userBadges: public_UserBadge[];
     readonly [RelationKeys]?:
       | 'institution'
       | 'institutionApplications'
       | 'missionCompletions'
       | 'participations'
-      | 'reviewedInstitutionApplications';
+      | 'reviewedInstitutionApplications'
+      | 'userBadges';
+  };
+  export type public_UserBadge = {
+    badgeVersionId: CodecTypes['pg/int4@1']['output'];
+    challengeId: CodecTypes['pg/int4@1']['output'];
+    completedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/int4@1']['output'];
+    issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    userId: CodecTypes['pg/int4@1']['output'];
+    badgeVersion: public_BadgeVersion;
+    challenge: public_Challenge;
+    user: public_User;
+    readonly [RelationKeys]?: 'badgeVersion' | 'challenge' | 'user';
   };
 }
 
 export declare const models: {
   public: {
+    BadgeVersion: Models.public_BadgeVersion;
     Challenge: Models.public_Challenge;
     ChallengeParticipation: Models.public_ChallengeParticipation;
     EmailVerification: Models.public_EmailVerification;
@@ -929,6 +1144,7 @@ export declare const models: {
     MissionCompletion: Models.public_MissionCompletion;
     PasswordReset: Models.public_PasswordReset;
     User: Models.public_User;
+    UserBadge: Models.public_UserBadge;
   };
 };
 
@@ -950,12 +1166,159 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly badge_versions: {
+              columns: {
+                readonly borderColor: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly centerImageKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly centerType: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly challengeId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly description: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly difficulty: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly icon: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly imagePositionX: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 50>;
+                  };
+                  readonly many: false;
+                };
+                readonly imagePositionY: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 50>;
+                  };
+                  readonly many: false;
+                };
+                readonly imageScale: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 100>;
+                  };
+                  readonly many: false;
+                };
+                readonly missionCount: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly name: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly shape: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly version: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['challengeId', 'version'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'badge_versions_challengeId_idx_73b8115d';
+                  readonly prefix: 'badge_versions_challengeId_idx';
+                  readonly columns: readonly ['challengeId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'badge_versions';
+                    readonly columns: readonly ['challengeId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenges';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly challenge_participations: {
               columns: {
                 readonly challengeId: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly completedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly id: {
@@ -1027,6 +1390,72 @@ type ContractBase = Omit<
             };
             readonly challenges: {
               columns: {
+                readonly badgeBorderColor: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly badgeCenterImageKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly badgeCenterType: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly badgeDescription: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly badgeIcon: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly badgeImagePositionX: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 50>;
+                  };
+                  readonly many: false;
+                };
+                readonly badgeImagePositionY: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 50>;
+                  };
+                  readonly many: false;
+                };
+                readonly badgeImageScale: {
+                  readonly dataType: 'pg/float8';
+                  readonly codecId: 'pg/float8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/float8@1', 100>;
+                  };
+                  readonly many: false;
+                };
+                readonly badgeName: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly coverImageKey: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -1060,9 +1489,21 @@ type ContractBase = Omit<
                   readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
                   readonly many: false;
                 };
+                readonly currentBadgeVersionId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly description: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly difficulty: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
                   readonly nullable: true;
                   readonly many: false;
                 };
@@ -1092,6 +1533,16 @@ type ContractBase = Omit<
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly routeMode: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'WALKING'>;
+                  };
                   readonly many: false;
                 };
                 readonly startAt: {
@@ -1124,7 +1575,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['currentBadgeVersionId'] }];
               indexes: readonly [
                 {
                   readonly name: 'challenges_institutionId_idx_bab0e331';
@@ -1134,6 +1585,18 @@ type ContractBase = Omit<
                 },
               ];
               foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenges';
+                    readonly columns: readonly ['currentBadgeVersionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'badge_versions';
+                    readonly columns: readonly ['id'];
+                  };
+                },
                 {
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
@@ -1843,6 +2306,111 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly user_badges: {
+              columns: {
+                readonly badgeVersionId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly challengeId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly completedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly issuedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'challengeId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'user_badges_badgeVersionId_idx_84875d7a';
+                  readonly prefix: 'user_badges_badgeVersionId_idx';
+                  readonly columns: readonly ['badgeVersionId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'user_badges_challengeId_idx_73b8115d';
+                  readonly prefix: 'user_badges_challengeId_idx';
+                  readonly columns: readonly ['challengeId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'user_badges_userId_idx_a489d58a';
+                  readonly prefix: 'user_badges_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user_badges';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'users';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user_badges';
+                    readonly columns: readonly ['challengeId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenges';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user_badges';
+                    readonly columns: readonly ['badgeVersionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'badge_versions';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly users: {
               columns: {
                 readonly createdAt: {
@@ -1987,6 +2555,25 @@ type ContractBase = Omit<
               readonly kind: 'valueSet';
               readonly values: readonly ['ACTIVE', 'SUSPENDED', 'DELETED'];
             };
+            readonly BadgeCenterType: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['IMAGE', 'ICON'];
+            };
+            readonly BadgeShape: {
+              readonly kind: 'valueSet';
+              readonly values: readonly [
+                'CIRCLE',
+                'TRIANGLE',
+                'DIAMOND',
+                'PENTAGON',
+                'HEXAGON',
+                'SHIELD',
+              ];
+            };
+            readonly ChallengeRouteMode: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['WALKING', 'CYCLING', 'DRIVING'];
+            };
             readonly ChallengeStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['DRAFT', 'ACTIVE', 'PAUSED', 'ENDED', 'ARCHIVED'];
@@ -2018,6 +2605,10 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly badge_versions: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'BadgeVersion';
+    };
     readonly challenge_participations: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'ChallengeParticipation';
@@ -2051,14 +2642,184 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PasswordReset';
     };
+    readonly user_badges: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'UserBadge';
+    };
     readonly users: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly BadgeVersion: {
+            readonly fields: {
+              readonly borderColor: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly centerImageKey: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly centerType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly challengeId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly description: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly difficulty: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly icon: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly imagePositionX: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly imagePositionY: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly imageScale: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly missionCount: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly name: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly shape: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly version: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly challenge: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['challengeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly currentForChallenge: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['currentBadgeVersionId'];
+                };
+              };
+              readonly userBadges: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'UserBadge';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['badgeVersionId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'badge_versions';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly borderColor: { readonly column: 'borderColor' };
+                readonly centerImageKey: { readonly column: 'centerImageKey' };
+                readonly centerType: { readonly column: 'centerType' };
+                readonly challengeId: { readonly column: 'challengeId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly description: { readonly column: 'description' };
+                readonly difficulty: { readonly column: 'difficulty' };
+                readonly icon: { readonly column: 'icon' };
+                readonly id: { readonly column: 'id' };
+                readonly imagePositionX: { readonly column: 'imagePositionX' };
+                readonly imagePositionY: { readonly column: 'imagePositionY' };
+                readonly imageScale: { readonly column: 'imageScale' };
+                readonly missionCount: { readonly column: 'missionCount' };
+                readonly name: { readonly column: 'name' };
+                readonly shape: { readonly column: 'shape' };
+                readonly version: { readonly column: 'version' };
+              };
+            };
+          };
           readonly Challenge: {
             readonly fields: {
+              readonly badgeBorderColor: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly badgeCenterImageKey: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly badgeCenterType: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly badgeDescription: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly badgeIcon: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly badgeImagePositionX: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly badgeImagePositionY: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly badgeImageScale: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/float8@1' };
+              };
+              readonly badgeName: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly coverImageKey: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -2078,9 +2839,17 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                 };
               };
+              readonly currentBadgeVersionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly description: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly difficulty: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly endAt: {
                 readonly nullable: true;
@@ -2099,6 +2868,10 @@ type ContractBase = Omit<
               };
               readonly region: {
                 readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly routeMode: {
+                readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly startAt: {
@@ -2125,6 +2898,29 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly badgeVersions: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BadgeVersion';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['challengeId'];
+                };
+              };
+              readonly currentBadgeVersion: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BadgeVersion';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['currentBadgeVersionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
               readonly institution: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -2159,20 +2955,43 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['challengeId'];
                 };
               };
+              readonly userBadges: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'UserBadge';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['challengeId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'challenges';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly badgeBorderColor: { readonly column: 'badgeBorderColor' };
+                readonly badgeCenterImageKey: { readonly column: 'badgeCenterImageKey' };
+                readonly badgeCenterType: { readonly column: 'badgeCenterType' };
+                readonly badgeDescription: { readonly column: 'badgeDescription' };
+                readonly badgeIcon: { readonly column: 'badgeIcon' };
+                readonly badgeImagePositionX: { readonly column: 'badgeImagePositionX' };
+                readonly badgeImagePositionY: { readonly column: 'badgeImagePositionY' };
+                readonly badgeImageScale: { readonly column: 'badgeImageScale' };
+                readonly badgeName: { readonly column: 'badgeName' };
                 readonly coverImageKey: { readonly column: 'coverImageKey' };
                 readonly coverPositionX: { readonly column: 'coverPositionX' };
                 readonly coverPositionY: { readonly column: 'coverPositionY' };
                 readonly createdAt: { readonly column: 'createdAt' };
+                readonly currentBadgeVersionId: { readonly column: 'currentBadgeVersionId' };
                 readonly description: { readonly column: 'description' };
+                readonly difficulty: { readonly column: 'difficulty' };
                 readonly endAt: { readonly column: 'endAt' };
                 readonly id: { readonly column: 'id' };
                 readonly institutionId: { readonly column: 'institutionId' };
                 readonly region: { readonly column: 'region' };
+                readonly routeMode: { readonly column: 'routeMode' };
                 readonly startAt: { readonly column: 'startAt' };
                 readonly status: { readonly column: 'status' };
                 readonly title: { readonly column: 'title' };
@@ -2185,6 +3004,13 @@ type ContractBase = Omit<
               readonly challengeId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly completedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
               };
               readonly id: {
                 readonly nullable: false;
@@ -2230,6 +3056,7 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly challengeId: { readonly column: 'challengeId' };
+                readonly completedAt: { readonly column: 'completedAt' };
                 readonly id: { readonly column: 'id' };
                 readonly joinedAt: { readonly column: 'joinedAt' };
                 readonly userId: { readonly column: 'userId' };
@@ -2986,6 +3813,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['reviewerId'];
                 };
               };
+              readonly userBadges: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'UserBadge';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'users';
@@ -3009,6 +3847,87 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly UserBadge: {
+            readonly fields: {
+              readonly badgeVersionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly challengeId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly completedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly issuedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly badgeVersion: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'BadgeVersion';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['badgeVersionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly challenge: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['challengeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'user_badges';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly badgeVersionId: { readonly column: 'badgeVersionId' };
+                readonly challengeId: { readonly column: 'challengeId' };
+                readonly completedAt: { readonly column: 'completedAt' };
+                readonly id: { readonly column: 'id' };
+                readonly issuedAt: { readonly column: 'issuedAt' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
         };
         readonly enum: {
           readonly AccountStatus: {
@@ -3017,6 +3936,32 @@ type ContractBase = Omit<
               { readonly name: 'ACTIVE'; readonly value: 'ACTIVE' },
               { readonly name: 'SUSPENDED'; readonly value: 'SUSPENDED' },
               { readonly name: 'DELETED'; readonly value: 'DELETED' },
+            ];
+          };
+          readonly BadgeCenterType: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'IMAGE'; readonly value: 'IMAGE' },
+              { readonly name: 'ICON'; readonly value: 'ICON' },
+            ];
+          };
+          readonly BadgeShape: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'CIRCLE'; readonly value: 'CIRCLE' },
+              { readonly name: 'TRIANGLE'; readonly value: 'TRIANGLE' },
+              { readonly name: 'DIAMOND'; readonly value: 'DIAMOND' },
+              { readonly name: 'PENTAGON'; readonly value: 'PENTAGON' },
+              { readonly name: 'HEXAGON'; readonly value: 'HEXAGON' },
+              { readonly name: 'SHIELD'; readonly value: 'SHIELD' },
+            ];
+          };
+          readonly ChallengeRouteMode: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'WALKING'; readonly value: 'WALKING' },
+              { readonly name: 'CYCLING'; readonly value: 'CYCLING' },
+              { readonly name: 'DRIVING'; readonly value: 'DRIVING' },
             ];
           };
           readonly ChallengeStatus: {
@@ -3066,6 +4011,23 @@ type ContractBase = Omit<
             { readonly name: 'ACTIVE'; readonly value: 'ACTIVE' },
             { readonly name: 'SUSPENDED'; readonly value: 'SUSPENDED' },
             { readonly name: 'DELETED'; readonly value: 'DELETED' },
+          ];
+          readonly BadgeCenterType: readonly [
+            { readonly name: 'IMAGE'; readonly value: 'IMAGE' },
+            { readonly name: 'ICON'; readonly value: 'ICON' },
+          ];
+          readonly BadgeShape: readonly [
+            { readonly name: 'CIRCLE'; readonly value: 'CIRCLE' },
+            { readonly name: 'TRIANGLE'; readonly value: 'TRIANGLE' },
+            { readonly name: 'DIAMOND'; readonly value: 'DIAMOND' },
+            { readonly name: 'PENTAGON'; readonly value: 'PENTAGON' },
+            { readonly name: 'HEXAGON'; readonly value: 'HEXAGON' },
+            { readonly name: 'SHIELD'; readonly value: 'SHIELD' },
+          ];
+          readonly ChallengeRouteMode: readonly [
+            { readonly name: 'WALKING'; readonly value: 'WALKING' },
+            { readonly name: 'CYCLING'; readonly value: 'CYCLING' },
+            { readonly name: 'DRIVING'; readonly value: 'DRIVING' },
           ];
           readonly ChallengeStatus: readonly [
             { readonly name: 'DRAFT'; readonly value: 'DRAFT' },

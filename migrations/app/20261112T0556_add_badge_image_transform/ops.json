@@ -1,0 +1,254 @@
+[
+  {
+    "id": "column.public.badge_versions.imagePositionX",
+    "label": "Add column \"imagePositionX\" to \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "imagePositionX",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"imagePositionX\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imagePositionX"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"imagePositionX\"",
+        "sql": "ALTER TABLE \"public\".\"badge_versions\" ADD COLUMN \"imagePositionX\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"imagePositionX\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imagePositionX"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.badge_versions.imagePositionY",
+    "label": "Add column \"imagePositionY\" to \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "imagePositionY",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"imagePositionY\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imagePositionY"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"imagePositionY\"",
+        "sql": "ALTER TABLE \"public\".\"badge_versions\" ADD COLUMN \"imagePositionY\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"imagePositionY\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imagePositionY"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.badge_versions.imageScale",
+    "label": "Add column \"imageScale\" to \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "imageScale",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"imageScale\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imageScale"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"imageScale\"",
+        "sql": "ALTER TABLE \"public\".\"badge_versions\" ADD COLUMN \"imageScale\" float8 DEFAULT 100 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"imageScale\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "badge_versions",
+          "imageScale"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeImagePositionX",
+    "label": "Add column \"badgeImagePositionX\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeImagePositionX",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeImagePositionX\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImagePositionX"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeImagePositionX\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeImagePositionX\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeImagePositionX\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImagePositionX"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeImagePositionY",
+    "label": "Add column \"badgeImagePositionY\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeImagePositionY",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeImagePositionY\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImagePositionY"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeImagePositionY\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeImagePositionY\" float8 DEFAULT 50 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeImagePositionY\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImagePositionY"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeImageScale",
+    "label": "Add column \"badgeImageScale\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeImageScale",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeImageScale\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImageScale"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeImageScale\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeImageScale\" float8 DEFAULT 100 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeImageScale\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeImageScale"
+        ]
+      }
+    ]
+  }
+]

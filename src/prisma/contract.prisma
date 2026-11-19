@@ -26,6 +26,47 @@ enum ChallengeStatus {
   ARCHIVED
 }
 
+// Challenge 추천 이동수단
+enum ChallengeRouteMode {
+  // 도보
+  WALKING
+
+  // 자전거
+  CYCLING
+
+  // 자동차
+  DRIVING
+}
+
+// Challenge 완료 배지 형태
+//
+// 기관이 직접 선택하지 않는다.
+// ACTIVE Mission 수에 따라 시스템이 자동으로 결정한다.
+//
+// 1~2개 -> CIRCLE
+// 3개   -> TRIANGLE
+// 4개   -> DIAMOND
+// 5개   -> PENTAGON
+// 6개   -> HEXAGON
+// 7개+  -> SHIELD
+enum BadgeShape {
+  CIRCLE
+  TRIANGLE
+  DIAMOND
+  PENTAGON
+  HEXAGON
+  SHIELD
+}
+
+// 배지 중앙 디자인 방식
+enum BadgeCenterType {
+  // 기관이 직접 업로드한 이미지
+  IMAGE
+
+  // Korea Trip Quest가 제공하는 기본 아이콘
+  ICON
+}
+
 // Mission 인증 방식
 enum MissionVerificationMode {
   // GPS 위치 인증만 성공하면 완료
@@ -49,8 +90,8 @@ enum MissionStatus {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
+  id       Int    @id @default(autoincrement())
+  email    String @unique
   nickname String?
 
   // 일반 이메일 계정은 passwordHash 사용
@@ -61,14 +102,14 @@ model User {
   googleSub String? @unique
 
   // 이메일 인증 상태
-  emailVerified   Boolean            @default(false)
+  emailVerified   Boolean @default(false)
   emailVerifiedAt TimestamptzString?
 
   // 권한
   role UserRole @default(USER)
 
   // 계정 상태
-  status           AccountStatus      @default(ACTIVE)
+  status           AccountStatus @default(ACTIVE)
   suspendedAt      TimestamptzString?
   suspensionReason String?
   deletedAt        TimestamptzString?
@@ -90,6 +131,9 @@ model User {
 
   participations     ChallengeParticipation[]
   missionCompletions MissionCompletion[]
+
+  // 사용자가 실제로 획득한 Challenge 완료 배지
+  userBadges UserBadge[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -250,6 +294,127 @@ model Challenge {
   startAt TimestamptzString?
   endAt   TimestamptzString?
 
+  // Challenge 요약 지도의 추천 이동수단
+  //
+  // 기관이 Challenge 기본 정보에서 선택한다.
+  //
+  // WALKING
+  // -> 도보
+  //
+  // CYCLING
+  // -> 자전거
+  //
+  // DRIVING
+  // -> 자동차
+  //
+  // 기존 Challenge는 기본적으로 도보를 사용한다.
+  routeMode ChallengeRouteMode @default(WALKING)
+
+  // Challenge 난이도
+  //
+  // 기관이 1 ~ 5 사이의 값으로 설정한다.
+  //
+  // 1 -> ★
+  // 2 -> ★★
+  // 3 -> ★★★
+  // 4 -> ★★★★
+  // 5 -> ★★★★★
+  //
+  // 기존 Challenge와의 호환을 위해 nullable로 두고,
+  // Challenge 활성화/재개 시 서비스에서 필수 여부를 검사한다.
+  difficulty Int?
+
+  // 현재 기관이 설정 중인 완료 배지 테두리 색상
+  //
+  // 예:
+  // #7C3AED
+  //
+  // 단색만 지원한다.
+  badgeBorderColor String?
+
+  // 배지 중앙 디자인 방식
+  //
+  // IMAGE
+  // -> 기관이 업로드한 이미지
+  //
+  // ICON
+  // -> Korea Trip Quest 기본 아이콘
+  badgeCenterType BadgeCenterType?
+
+  // 중앙 이미지 사용 시 Supabase Storage 내부 경로
+  //
+  // 예:
+  // challenge-badges/15/uuid.jpg
+  badgeCenterImageKey String?
+
+  // 완료 배지 중앙 이미지 크기
+  //
+  // 100
+  // -> 기본 크기
+  //
+  // 값이 작아질수록 배지 안에서 이미지가 작게 표시된다.
+  //
+  // 기존 Challenge와의 호환을 위해
+  // 기본값 100을 사용한다.
+  badgeImageScale Float @default(100)
+
+  // 완료 배지 중앙 이미지 가로 위치
+  //
+  // 0
+  // -> 가장 왼쪽
+  //
+  // 50
+  // -> 중앙
+  //
+  // 100
+  // -> 가장 오른쪽
+  badgeImagePositionX Float @default(50)
+
+  // 완료 배지 중앙 이미지 세로 위치
+  //
+  // 0
+  // -> 가장 위
+  //
+  // 50
+  // -> 중앙
+  //
+  // 100
+  // -> 가장 아래
+  badgeImagePositionY Float @default(50)
+
+  // 기본 아이콘 사용 시 아이콘 식별자
+  //
+  // 예:
+  // PALACE
+  // BICYCLE
+  // MOUNTAIN
+  // SEA
+  badgeIcon String?
+
+  // 기관이 설정하는 배지 이름
+  //
+  // 예:
+  // 서울 역사 탐험가
+  badgeName String?
+
+  // 기관이 설정하는 배지 설명
+  badgeDescription String?
+
+  // 현재 Challenge에서 실제로 지급 중인 BadgeVersion
+  //
+  // DRAFT 상태이거나 아직 배지 버전이 확정되지 않은
+  // 기존 Challenge는 NULL일 수 있다.
+  //
+  // PAUSED 상태에서 Mission/배지 설정을 수정해도
+  // 이 값은 즉시 바뀌지 않고,
+  // Challenge를 다시 ACTIVE로 전환할 때 새 버전 여부를 결정한다.
+  currentBadgeVersionId Int? @unique
+  currentBadgeVersion   BadgeVersion? @relation(
+    "CurrentBadgeVersion",
+    fields: [currentBadgeVersionId],
+    references: [id]
+  )
+
   // Challenge 대표사진
   //
   // 실제 이미지 자체를 DB에 저장하지 않고
@@ -264,7 +429,7 @@ model Challenge {
   // 0 ~ 100 백분율 좌표를 사용한다.
   //
   // 50, 50
-  // → 사진 정중앙
+  // -> 사진 정중앙
   //
   // 화면에서는 CSS object-position에 사용한다.
   coverPositionX Float @default(50)
@@ -279,6 +444,14 @@ model Challenge {
   missions       Mission[]
   participations ChallengeParticipation[]
 
+  // 이 Challenge에서 생성된 모든 배지 버전
+  badgeVersions BadgeVersion[]
+    @relation("ChallengeBadgeVersions")
+
+  // 사용자에게 실제 지급된 배지 기록
+  userBadges UserBadge[]
+    @relation("ChallengeUserBadges")
+
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 
@@ -286,7 +459,7 @@ model Challenge {
 }
 
 model Mission {
-  id          Int     @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   title       String
   description String?
   address     String?
@@ -305,7 +478,7 @@ model Mission {
   // 0 ~ 100 백분율 좌표를 사용한다.
   //
   // 50, 50
-  // → 사진 정중앙
+  // -> 사진 정중앙
   //
   // 화면에서는 CSS object-position에 사용한다.
   photoPositionX Float @default(50)
@@ -372,6 +545,14 @@ model ChallengeParticipation {
 
   joinedAt TimestamptzString @default(now())
 
+  // Challenge를 최초로 100% 완료한 시각
+  //
+  // 한 번 기록되면 기관이 나중에 Mission을 추가하거나
+  // Mission을 비활성화해도 제거하지 않는다.
+  //
+  // 사용자의 과거 완주 상태를 영구적으로 보존하기 위한 값이다.
+  completedAt TimestamptzString?
+
   @@unique([userId, challengeId])
   @@map("challenge_participations")
 }
@@ -404,4 +585,143 @@ model MissionCompletion {
 
   @@unique([userId, missionId])
   @@map("mission_completions")
+}
+
+// Challenge 완료 배지의 버전별 스냅샷
+//
+// Challenge는 PAUSED 상태에서 Mission과 배지 설정을 변경할 수 있다.
+// 다시 ACTIVE가 될 때 기존 버전과 구성이 달라졌다면
+// 새로운 BadgeVersion을 생성한다.
+//
+// 생성된 BadgeVersion은 과거 사용자 배지를 보존하기 위해
+// 이후 수정하지 않는 것을 원칙으로 한다.
+model BadgeVersion {
+  id Int @id @default(autoincrement())
+
+  challengeId Int
+  challenge   Challenge @relation(
+    "ChallengeBadgeVersions",
+    fields: [challengeId],
+    references: [id]
+  )
+
+  // Challenge 내부 배지 버전 번호
+  //
+  // 예:
+  // Version 1
+  // Version 2
+  version Int
+
+  // 이 버전이 만들어질 당시 ACTIVE Mission 수
+  missionCount Int
+
+  // Mission 수를 기준으로 자동 결정된 배지 형태
+  shape BadgeShape
+
+  // 이 버전 당시 Challenge 난이도
+  difficulty Int
+
+  // 기관이 설정한 단색 테두리
+  borderColor String
+
+  // 중앙 이미지 / 기본 아이콘 구분
+  centerType BadgeCenterType
+
+  // IMAGE 방식일 때 사용한 Storage 경로
+  //
+  // 과거 BadgeVersion에서 사용 중인 이미지는
+  // 해당 배지 보존을 위해 삭제하지 않는 것을 원칙으로 한다.
+  centerImageKey String?
+
+  // 해당 BadgeVersion이 생성될 당시의
+  // 중앙 이미지 크기
+  //
+  // 이후 기관이 현재 배지를 수정하더라도
+  // 과거 사용자가 획득한 배지의 모습은 유지된다.
+  imageScale Float @default(100)
+
+  // 해당 BadgeVersion이 생성될 당시의
+  // 중앙 이미지 가로 위치
+  imagePositionX Float @default(50)
+
+  // 해당 BadgeVersion이 생성될 당시의
+  // 중앙 이미지 세로 위치
+  imagePositionY Float @default(50)
+
+  // ICON 방식일 때 사용한 기본 아이콘 식별자
+  icon String?
+
+  // 지급 당시 배지 이름
+  name String
+
+  // 지급 당시 배지 설명
+  description String?
+
+  // 이 BadgeVersion이 현재 지급 중인 버전인지 판단하기 위한
+  // Challenge.currentBadgeVersion의 반대 관계
+  currentForChallenge Challenge?
+    @relation("CurrentBadgeVersion")
+
+  // 이 버전으로 실제 지급된 사용자 배지
+  userBadges UserBadge[]
+
+  createdAt TimestamptzString @default(now())
+
+  @@unique([challengeId, version])
+  @@index([challengeId])
+
+  @@map("badge_versions")
+}
+
+// USER가 실제로 획득한 완료 배지
+//
+// BadgeVersion 자체가 지급 당시 배지 정보를 보존하는
+// 불변 스냅샷 역할을 하기 때문에,
+// UserBadge에는 동일한 디자인 값을 중복 저장하지 않는다.
+model UserBadge {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(
+    fields: [userId],
+    references: [id]
+  )
+
+  challengeId Int
+  challenge   Challenge @relation(
+    "ChallengeUserBadges",
+    fields: [challengeId],
+    references: [id]
+  )
+
+  // 사용자가 실제로 획득한 당시의 BadgeVersion
+  badgeVersionId Int
+  badgeVersion   BadgeVersion @relation(
+    fields: [badgeVersionId],
+    references: [id]
+  )
+
+  // 해당 Challenge를 실제로 완료한 시각
+  //
+  // ChallengeParticipation.completedAt과 같은 완료 시각을
+  // 배지 기록에서도 쉽게 확인할 수 있도록 저장한다.
+  completedAt TimestamptzString
+
+  // 실제 UserBadge DB 레코드가 발급된 시각
+  //
+  // 기존 테스트 완료자에게 나중에 소급 지급하는 경우
+  // completedAt과 issuedAt은 서로 다를 수 있다.
+  issuedAt TimestamptzString @default(now())
+
+  // 같은 사용자는 동일 Challenge의 완료 배지를
+  // 한 번만 획득한다.
+  //
+  // Challenge가 나중에 새 BadgeVersion으로 변경되어도
+  // 기존 사용자의 과거 배지는 교체하지 않는다.
+  @@unique([userId, challengeId])
+
+  @@index([badgeVersionId])
+  @@index([challengeId])
+
+  @@map("user_badges")
 }

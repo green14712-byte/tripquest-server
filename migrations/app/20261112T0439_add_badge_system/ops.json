@@ -1,0 +1,992 @@
+[
+  {
+    "id": "table.badge_versions",
+    "label": "Create table \"badge_versions\"",
+    "summary": "Creates table \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"badge_versions\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"badge_versions\"",
+        "sql": "CREATE TABLE \"public\".\"badge_versions\" (\n  \"borderColor\" text NOT NULL,\n  \"centerImageKey\" text,\n  \"centerType\" text NOT NULL,\n  \"challengeId\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"difficulty\" int4 NOT NULL,\n  \"icon\" text,\n  \"id\" SERIAL NOT NULL,\n  \"missionCount\" int4 NOT NULL,\n  \"name\" text NOT NULL,\n  \"shape\" text NOT NULL,\n  \"version\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"badge_versions_centerType_check_b6357795\" CHECK (\"centerType\" IN ('IMAGE', 'ICON')),\n  CONSTRAINT \"badge_versions_shape_check_cfa41626\" CHECK (\"shape\" IN ('CIRCLE', 'TRIANGLE', 'DIAMOND', 'PENTAGON', 'HEXAGON', 'SHIELD'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"badge_versions\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_badges",
+    "label": "Create table \"user_badges\"",
+    "summary": "Creates table \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_badges\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_badges\"",
+        "sql": "CREATE TABLE \"public\".\"user_badges\" (\n  \"badgeVersionId\" int4 NOT NULL,\n  \"challengeId\" int4 NOT NULL,\n  \"completedAt\" timestamptz NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"issuedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_badges\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenge_participations.completedAt",
+    "label": "Add column \"completedAt\" to \"challenge_participations\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "completedAt",
+        "table": "challenge_participations"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"completedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenge_participations",
+          "completedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"completedAt\"",
+        "sql": "ALTER TABLE \"public\".\"challenge_participations\" ADD COLUMN \"completedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"completedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenge_participations",
+          "completedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeBorderColor",
+    "label": "Add column \"badgeBorderColor\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeBorderColor",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeBorderColor\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeBorderColor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeBorderColor\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeBorderColor\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeBorderColor\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeBorderColor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeCenterImageKey",
+    "label": "Add column \"badgeCenterImageKey\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeCenterImageKey",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeCenterImageKey\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeCenterImageKey"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeCenterImageKey\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeCenterImageKey\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeCenterImageKey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeCenterImageKey"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeCenterType",
+    "label": "Add column \"badgeCenterType\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeCenterType",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeCenterType\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeCenterType"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeCenterType\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeCenterType\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeCenterType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeCenterType"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeDescription",
+    "label": "Add column \"badgeDescription\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeDescription",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeDescription\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeDescription"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeDescription\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeDescription\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeDescription\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeDescription"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeIcon",
+    "label": "Add column \"badgeIcon\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeIcon",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeIcon\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeIcon"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeIcon\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeIcon\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeIcon\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeIcon"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.badgeName",
+    "label": "Add column \"badgeName\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "badgeName",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"badgeName\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"badgeName\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"badgeName\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"badgeName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "badgeName"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.currentBadgeVersionId",
+    "label": "Add column \"currentBadgeVersionId\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "currentBadgeVersionId",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"currentBadgeVersionId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "currentBadgeVersionId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"currentBadgeVersionId\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"currentBadgeVersionId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"currentBadgeVersionId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "currentBadgeVersionId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.challenges.difficulty",
+    "label": "Add column \"difficulty\" to \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "difficulty",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"difficulty\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "difficulty"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"difficulty\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD COLUMN \"difficulty\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"difficulty\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "challenges",
+          "difficulty"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.badge_versions.badge_versions_challengeId_version_key",
+    "label": "Add unique constraint on \"badge_versions\" (challengeId, version)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "badge_versions_challengeId_version_key",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"badge_versions_challengeId_version_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "badge_versions_challengeId_version_key",
+          "public",
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"badge_versions_challengeId_version_key\"",
+        "sql": "ALTER TABLE \"public\".\"badge_versions\" ADD CONSTRAINT \"badge_versions_challengeId_version_key\" UNIQUE (\"challengeId\", \"version\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"badge_versions_challengeId_version_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "badge_versions_challengeId_version_key",
+          "public",
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.challenges.challenges_badgeCenterType_check_db05ede8",
+    "label": "Add check constraint \"challenges_badgeCenterType_check_db05ede8\" on \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "challenges_badgeCenterType_check_db05ede8",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"challenges_badgeCenterType_check_db05ede8\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_badgeCenterType_check_db05ede8",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"challenges_badgeCenterType_check_db05ede8\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD CONSTRAINT \"challenges_badgeCenterType_check_db05ede8\" CHECK (\"badgeCenterType\" IN ('IMAGE', 'ICON'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"challenges_badgeCenterType_check_db05ede8\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_badgeCenterType_check_db05ede8",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.challenges.challenges_currentBadgeVersionId_key",
+    "label": "Add unique constraint on \"challenges\" (currentBadgeVersionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "challenges_currentBadgeVersionId_key",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"challenges_currentBadgeVersionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_currentBadgeVersionId_key",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"challenges_currentBadgeVersionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\" ADD CONSTRAINT \"challenges_currentBadgeVersionId_key\" UNIQUE (\"currentBadgeVersionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"challenges_currentBadgeVersionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_currentBadgeVersionId_key",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user_badges.user_badges_userId_challengeId_key",
+    "label": "Add unique constraint on \"user_badges\" (userId, challengeId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_badges_userId_challengeId_key",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_badges_userId_challengeId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_userId_challengeId_key",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_badges_userId_challengeId_key\"",
+        "sql": "ALTER TABLE \"public\".\"user_badges\" ADD CONSTRAINT \"user_badges_userId_challengeId_key\" UNIQUE (\"userId\", \"challengeId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_badges_userId_challengeId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_userId_challengeId_key",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.badge_versions.badge_versions_challengeId_idx_73b8115d",
+    "label": "Create index \"badge_versions_challengeId_idx_73b8115d\" on \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "badge_versions_challengeId_idx_73b8115d",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"badge_versions_challengeId_idx_73b8115d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"badge_versions_challengeId_idx_73b8115d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"badge_versions_challengeId_idx_73b8115d\"",
+        "sql": "CREATE INDEX \"badge_versions_challengeId_idx_73b8115d\" ON \"public\".\"badge_versions\" (\"challengeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"badge_versions_challengeId_idx_73b8115d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"badge_versions_challengeId_idx_73b8115d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_badges.user_badges_badgeVersionId_idx_84875d7a",
+    "label": "Create index \"user_badges_badgeVersionId_idx_84875d7a\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_badges_badgeVersionId_idx_84875d7a",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_badges_badgeVersionId_idx_84875d7a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_badgeVersionId_idx_84875d7a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_badges_badgeVersionId_idx_84875d7a\"",
+        "sql": "CREATE INDEX \"user_badges_badgeVersionId_idx_84875d7a\" ON \"public\".\"user_badges\" (\"badgeVersionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_badges_badgeVersionId_idx_84875d7a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_badgeVersionId_idx_84875d7a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_badges.user_badges_challengeId_idx_73b8115d",
+    "label": "Create index \"user_badges_challengeId_idx_73b8115d\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_badges_challengeId_idx_73b8115d",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_badges_challengeId_idx_73b8115d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_challengeId_idx_73b8115d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_badges_challengeId_idx_73b8115d\"",
+        "sql": "CREATE INDEX \"user_badges_challengeId_idx_73b8115d\" ON \"public\".\"user_badges\" (\"challengeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_badges_challengeId_idx_73b8115d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_challengeId_idx_73b8115d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_badges.user_badges_userId_idx_a489d58a",
+    "label": "Create index \"user_badges_userId_idx_a489d58a\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_badges_userId_idx_a489d58a",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_badges_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_badges_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"user_badges_userId_idx_a489d58a\" ON \"public\".\"user_badges\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_badges_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_badges_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.badge_versions.badge_versions_challengeId_fkey",
+    "label": "Add foreign key \"badge_versions_challengeId_fkey\" on \"badge_versions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "badge_versions_challengeId_fkey",
+        "table": "badge_versions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"badge_versions_challengeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "badge_versions_challengeId_fkey",
+          "public",
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"badge_versions_challengeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"badge_versions\"\nADD CONSTRAINT \"badge_versions_challengeId_fkey\"\nFOREIGN KEY (\"challengeId\")\nREFERENCES \"public\".\"challenges\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"badge_versions_challengeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "badge_versions_challengeId_fkey",
+          "public",
+          "\"public\".\"badge_versions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.challenges.challenges_currentBadgeVersionId_fkey",
+    "label": "Add foreign key \"challenges_currentBadgeVersionId_fkey\" on \"challenges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "challenges_currentBadgeVersionId_fkey",
+        "table": "challenges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"challenges_currentBadgeVersionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_currentBadgeVersionId_fkey",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"challenges_currentBadgeVersionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"challenges\"\nADD CONSTRAINT \"challenges_currentBadgeVersionId_fkey\"\nFOREIGN KEY (\"currentBadgeVersionId\")\nREFERENCES \"public\".\"badge_versions\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"challenges_currentBadgeVersionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenges_currentBadgeVersionId_fkey",
+          "public",
+          "\"public\".\"challenges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_badges.user_badges_userId_fkey",
+    "label": "Add foreign key \"user_badges_userId_fkey\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_badges_userId_fkey",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_badges_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_userId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_badges_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user_badges\"\nADD CONSTRAINT \"user_badges_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_badges_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_userId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_badges.user_badges_challengeId_fkey",
+    "label": "Add foreign key \"user_badges_challengeId_fkey\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_badges_challengeId_fkey",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_badges_challengeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_challengeId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_badges_challengeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user_badges\"\nADD CONSTRAINT \"user_badges_challengeId_fkey\"\nFOREIGN KEY (\"challengeId\")\nREFERENCES \"public\".\"challenges\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_badges_challengeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_challengeId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_badges.user_badges_badgeVersionId_fkey",
+    "label": "Add foreign key \"user_badges_badgeVersionId_fkey\" on \"user_badges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_badges_badgeVersionId_fkey",
+        "table": "user_badges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_badges_badgeVersionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_badgeVersionId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_badges_badgeVersionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user_badges\"\nADD CONSTRAINT \"user_badges_badgeVersionId_fkey\"\nFOREIGN KEY (\"badgeVersionId\")\nREFERENCES \"public\".\"badge_versions\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_badges_badgeVersionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_badges_badgeVersionId_fkey",
+          "public",
+          "\"public\".\"user_badges\""
+        ]
+      }
+    ]
+  }
+]

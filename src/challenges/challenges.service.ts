@@ -10,11 +10,16 @@ import {
 import { db } from '../prisma/db';
 
 import {
+  createBadgeCenterImageSignedUrl,
   createChallengeCoverSignedUrl,
   createMissionPhotoSignedUrl,
+  deleteBadgeCenterImage,
   deleteChallengeCover,
+  type BadgeCenterImageUploadFile,
   type ChallengeCoverUploadFile,
+  uploadBadgeCenterImage,
   uploadChallengeCover,
+  validateBadgeCenterImageFile,
   validateChallengeCoverFile,
 } from '../storage/supabase-storage';
 
@@ -29,18 +34,18 @@ import { UpdateChallengeDto } from './dto/update-challenge.dto';
 @Injectable()
 export class ChallengesService {
   /*
-   * DB 내부에서 사용하는 coverImageKey는
-   * API 응답으로 직접 노출하지 않는다.
+   * Storage 내부 key는 API 응답으로 직접 노출하지 않는다.
    *
-   * 화면에서는 짧은 유효시간을 가진
-   * Signed URL만 사용한다.
+   * Challenge 대표사진과 배지 중앙 이미지는
+   * Signed URL만 클라이언트에 전달한다.
    */
   private async toChallengeResponse<
     T extends {
       coverImageKey: string | null;
+      badgeCenterImageKey: string | null;
     },
   >(challenge: T) {
-    const { coverImageKey, ...safeChallenge } = challenge;
+    const { coverImageKey, badgeCenterImageKey, ...safeChallenge } = challenge;
 
     let coverImageUrl: string | null = null;
 
@@ -48,13 +53,18 @@ export class ChallengesService {
       try {
         coverImageUrl = await createChallengeCoverSignedUrl(coverImageKey);
       } catch {
-        /*
-         * Storage URL 생성 문제 때문에
-         * Challenge 목록이나 상세 조회 전체가 실패하지 않도록 한다.
-         *
-         * URL 생성에 실패하면 대표사진이 없는 것처럼 표시한다.
-         */
         coverImageUrl = null;
+      }
+    }
+
+    let badgeCenterImageUrl: string | null = null;
+
+    if (badgeCenterImageKey) {
+      try {
+        badgeCenterImageUrl =
+          await createBadgeCenterImageSignedUrl(badgeCenterImageKey);
+      } catch {
+        badgeCenterImageUrl = null;
       }
     }
 
@@ -62,15 +72,15 @@ export class ChallengesService {
       ...safeChallenge,
 
       hasCoverImage: coverImageKey !== null,
-
       coverImageUrl,
+
+      hasBadgeCenterImage: badgeCenterImageKey !== null,
+      badgeCenterImageUrl,
     };
   }
 
   /*
-   * 업로드된 Challenge 대표사진을 검증하고
-   * Storage 유틸의 일반 Error를
-   * 클라이언트가 이해할 수 있는 400 오류로 변환한다.
+   * Challenge 대표사진 검증
    */
   private validateCoverImage(file: ChallengeCoverUploadFile) {
     try {
@@ -80,6 +90,21 @@ export class ChallengesService {
         error instanceof Error
           ? error.message
           : 'Challenge 대표사진을 확인할 수 없습니다.',
+      );
+    }
+  }
+
+  /*
+   * Challenge 완료 배지 중앙 이미지 검증
+   */
+  private validateBadgeImage(file: BadgeCenterImageUploadFile) {
+    try {
+      validateBadgeCenterImageFile(file);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error
+          ? error.message
+          : '완료 배지 이미지를 확인할 수 없습니다.',
       );
     }
   }
@@ -106,25 +131,274 @@ export class ChallengesService {
   }
 
   /*
+   * ACTIVE Mission 수에 따라
+   * 배지 형태를 자동 결정한다.
+   */
+  private getBadgeShape(activeMissionCount: number) {
+    if (activeMissionCount <= 2) {
+      return 'CIRCLE' as const;
+    }
+
+    if (activeMissionCount === 3) {
+      return 'TRIANGLE' as const;
+    }
+
+    if (activeMissionCount === 4) {
+      return 'DIAMOND' as const;
+    }
+
+    if (activeMissionCount === 5) {
+      return 'PENTAGON' as const;
+    }
+
+    if (activeMissionCount === 6) {
+      return 'HEXAGON' as const;
+    }
+
+    return 'SHIELD' as const;
+  }
+
+  /*
+   * Challenge 운영 시작 / 재개 전에
+   * 완료 배지 설정을 검사한다.
+   */
+  private validateBadgeSettings(challenge: {
+    difficulty: number | null;
+    badgeBorderColor: string | null;
+    badgeCenterType: 'IMAGE' | 'ICON' | null;
+    badgeCenterImageKey: string | null;
+    badgeImageScale: number;
+    badgeImagePositionX: number;
+    badgeImagePositionY: number;
+    badgeIcon: string | null;
+    badgeName: string | null;
+    badgeDescription: string | null;
+  }) {
+    if (
+      challenge.difficulty === null ||
+      !Number.isInteger(challenge.difficulty) ||
+      challenge.difficulty < 1 ||
+      challenge.difficulty > 5
+    ) {
+      throw new ConflictException(
+        'Challenge 운영 전에 난이도를 1~5단계로 설정해주세요.',
+      );
+    }
+
+    if (
+      !challenge.badgeBorderColor ||
+      !/^#[0-9A-Fa-f]{6}$/.test(challenge.badgeBorderColor)
+    ) {
+      throw new ConflictException(
+        'Challenge 운영 전에 완료 배지의 테두리 색상을 설정해주세요.',
+      );
+    }
+
+    if (!challenge.badgeName?.trim()) {
+      throw new ConflictException(
+        'Challenge 운영 전에 완료 배지 이름을 설정해주세요.',
+      );
+    }
+
+    if (!challenge.badgeDescription?.trim()) {
+      throw new ConflictException(
+        'Challenge 운영 전에 완료 배지 설명을 설정해주세요.',
+      );
+    }
+
+    if (!challenge.badgeCenterType) {
+      throw new ConflictException(
+        'Challenge 운영 전에 완료 배지의 중앙 디자인을 설정해주세요.',
+      );
+    }
+
+    if (
+      challenge.badgeCenterType === 'IMAGE' &&
+      !challenge.badgeCenterImageKey
+    ) {
+      throw new ConflictException(
+        '이미지형 완료 배지를 사용하려면 중앙 이미지를 먼저 등록해주세요.',
+      );
+    }
+
+    if (challenge.badgeCenterType === 'ICON' && !challenge.badgeIcon?.trim()) {
+      throw new ConflictException(
+        '아이콘형 완료 배지를 사용하려면 중앙 아이콘을 선택해주세요.',
+      );
+    }
+
+    if (
+      !Number.isFinite(challenge.badgeImageScale) ||
+      challenge.badgeImageScale < 40 ||
+      challenge.badgeImageScale > 100
+    ) {
+      throw new ConflictException(
+        '배지 이미지 크기는 40에서 100 사이로 설정해주세요.',
+      );
+    }
+
+    if (
+      !Number.isFinite(challenge.badgeImagePositionX) ||
+      challenge.badgeImagePositionX < 0 ||
+      challenge.badgeImagePositionX > 100
+    ) {
+      throw new ConflictException(
+        '배지 이미지 가로 위치는 0에서 100 사이로 설정해주세요.',
+      );
+    }
+
+    if (
+      !Number.isFinite(challenge.badgeImagePositionY) ||
+      challenge.badgeImagePositionY < 0 ||
+      challenge.badgeImagePositionY > 100
+    ) {
+      throw new ConflictException(
+        '배지 이미지 세로 위치는 0에서 100 사이로 설정해주세요.',
+      );
+    }
+  }
+
+  /*
+   * 특정 Storage 이미지가 과거 BadgeVersion에
+   * 이미 사용되고 있는지 확인한다.
+   *
+   * 과거 BadgeVersion이 참조하고 있다면
+   * 그 이미지는 역사적인 배지 스냅샷의 일부이므로 삭제하면 안 된다.
+   */
+  private async isBadgeImageUsedByVersion(fileKey: string) {
+    const badgeVersion = await db.orm.public.BadgeVersion.first({
+      centerImageKey: fileKey,
+    });
+
+    return badgeVersion !== null;
+  }
+
+  /*
+   * Challenge를 ACTIVE로 전환하기 직전에
+   * 현재 Mission 구성 + 현재 배지 설정으로
+   * BadgeVersion을 확정한다.
+   */
+  private async ensureCurrentBadgeVersion(challengeId: number) {
+    const challenge = await db.orm.public.Challenge.first({
+      id: challengeId,
+    });
+
+    if (!challenge) {
+      throw new NotFoundException('Challenge를 찾을 수 없습니다.');
+    }
+
+    this.validateBadgeSettings(challenge);
+
+    const missions = await db.orm.public.Mission.where({
+      challengeId,
+    }).all();
+
+    const activeMissionCount = missions.filter(
+      (mission) => mission.status === 'ACTIVE',
+    ).length;
+
+    if (activeMissionCount === 0) {
+      throw new ConflictException(
+        '활성화된 Mission을 하나 이상 등록해야 완료 배지를 확정할 수 있습니다.',
+      );
+    }
+
+    const shape = this.getBadgeShape(activeMissionCount);
+
+    let currentBadgeVersion = null;
+
+    if (challenge.currentBadgeVersionId !== null) {
+      currentBadgeVersion = await db.orm.public.BadgeVersion.first({
+        id: challenge.currentBadgeVersionId,
+      });
+    }
+
+    const normalizedBadgeName = challenge.badgeName!.trim();
+
+    const normalizedBadgeDescription = challenge.badgeDescription!.trim();
+
+    const normalizedBadgeIcon = challenge.badgeIcon?.trim() || null;
+
+    const currentVersionMatches =
+      currentBadgeVersion !== null &&
+      currentBadgeVersion.missionCount === activeMissionCount &&
+      currentBadgeVersion.shape === shape &&
+      currentBadgeVersion.difficulty === challenge.difficulty &&
+      currentBadgeVersion.borderColor === challenge.badgeBorderColor &&
+      currentBadgeVersion.centerType === challenge.badgeCenterType &&
+      currentBadgeVersion.centerImageKey === challenge.badgeCenterImageKey &&
+      currentBadgeVersion.imageScale === challenge.badgeImageScale &&
+      currentBadgeVersion.imagePositionX === challenge.badgeImagePositionX &&
+      currentBadgeVersion.imagePositionY === challenge.badgeImagePositionY &&
+      currentBadgeVersion.icon === normalizedBadgeIcon &&
+      currentBadgeVersion.name === normalizedBadgeName &&
+      currentBadgeVersion.description === normalizedBadgeDescription;
+
+    if (currentVersionMatches) {
+      return currentBadgeVersion;
+    }
+
+    const existingVersions = await db.orm.public.BadgeVersion.where({
+      challengeId,
+    }).all();
+
+    const nextVersion =
+      existingVersions.reduce(
+        (highest, version) => Math.max(highest, version.version),
+        0,
+      ) + 1;
+
+    const createdBadgeVersion = await db.orm.public.BadgeVersion.create({
+      challengeId,
+
+      version: nextVersion,
+
+      missionCount: activeMissionCount,
+
+      shape,
+
+      difficulty: challenge.difficulty!,
+
+      borderColor: challenge.badgeBorderColor!,
+
+      centerType: challenge.badgeCenterType!,
+
+      centerImageKey:
+        challenge.badgeCenterType === 'IMAGE'
+          ? challenge.badgeCenterImageKey
+          : null,
+
+      imageScale: challenge.badgeImageScale,
+
+      imagePositionX: challenge.badgeImagePositionX,
+
+      imagePositionY: challenge.badgeImagePositionY,
+
+      icon: challenge.badgeCenterType === 'ICON' ? normalizedBadgeIcon : null,
+
+      name: normalizedBadgeName,
+
+      description: normalizedBadgeDescription,
+    });
+
+    const updatedChallenge = await db.orm.public.Challenge.where({
+      id: challengeId,
+    }).update({
+      currentBadgeVersionId: createdBadgeVersion.id,
+    });
+
+    if (!updatedChallenge) {
+      throw new NotFoundException(
+        '현재 완료 배지 버전을 연결할 Challenge를 찾을 수 없습니다.',
+      );
+    }
+
+    return createdBadgeVersion;
+  }
+
+  /*
    * INSTITUTION:
    * Challenge 생성
-   *
-   * 생성 직후에는 DRAFT 상태다.
-   *
-   * 대표사진은 선택사항이다.
-   *
-   * 대표사진 초점은 0 ~ 100 백분율 좌표로 저장한다.
-   * 값이 전달되지 않으면 중앙인 50 / 50을 사용한다.
-   *
-   * 사진 업로드가 요청된 경우:
-   *
-   * 1. 입력 파일 검증
-   * 2. Challenge 생성
-   * 3. Storage 업로드
-   * 4. coverImageKey DB 저장
-   *
-   * 업로드나 DB 저장에 실패하면
-   * 불완전하게 생성된 데이터와 Storage 파일을 정리한다.
    */
   async create(
     institutionId: number,
@@ -173,10 +447,6 @@ export class ChallengesService {
       institutionId,
     });
 
-    /*
-     * 대표사진을 선택하지 않은 경우에는
-     * 기존 Challenge 생성 흐름과 동일하게 종료한다.
-     */
     if (!coverImage) {
       return {
         message: 'Challenge가 생성되었습니다.',
@@ -206,31 +476,17 @@ export class ChallengesService {
         challenge: await this.toChallengeResponse(updatedChallenge),
       };
     } catch {
-      /*
-       * Storage 업로드까지 성공했지만
-       * 이후 처리가 실패한 경우 새 파일 정리
-       */
       if (uploadedFileKey) {
         try {
           await deleteChallengeCover(uploadedFileKey);
-        } catch {
-          // cleanup 오류가 원래 오류를 덮어쓰지 않도록 한다.
-        }
+        } catch {}
       }
 
-      /*
-       * 사진 등록까지 하나의 Challenge 생성 과정으로 취급한다.
-       *
-       * 대표사진 등록에 실패하면
-       * 불완전한 새 Challenge도 제거한다.
-       */
       try {
         await db.orm.public.Challenge.where({
           id: challenge.id,
         }).delete();
-      } catch {
-        // cleanup 오류가 원래 오류를 덮어쓰지 않도록 한다.
-      }
+      } catch {}
 
       throw new InternalServerErrorException(
         'Challenge 대표사진 업로드 중 오류가 발생했습니다.',
@@ -261,23 +517,6 @@ export class ChallengesService {
   /*
    * INSTITUTION:
    * 본인 기관 Challenge 상세 조회
-   *
-   * 기관 관리 화면에서는
-   * ACTIVE / INACTIVE Mission을 모두 보여준다.
-   *
-   * 각 Mission의 완료 기록 수도 함께 계산한다.
-   *
-   * 완료 기록이 없는 Mission:
-   * → 물리 삭제 가능
-   *
-   * 완료 기록이 있는 Mission:
-   * → 물리 삭제 불가
-   * → 비활성화 방식으로 관리
-   *
-   * Mission 관광지 대표사진 정보도 함께 제공한다.
-   *
-   * Storage 내부 key는 노출하지 않고,
-   * Signed URL만 응답한다.
    */
   async findInstitutionChallengeById(
     challengeId: number,
@@ -306,26 +545,12 @@ export class ChallengesService {
     const managementMissions = [];
 
     for (const mission of missions) {
-      /*
-       * 해당 Mission의 완료 기록 수를 계산한다.
-       *
-       * MissionCompletion이 하나라도 존재하면
-       * Mission 물리 삭제는 허용하지 않는다.
-       */
       const completions = await db.orm.public.MissionCompletion.where({
         missionId: mission.id,
       }).all();
 
       const completionCount = completions.length;
 
-      /*
-       * Mission 관광지 대표사진 Signed URL 생성
-       *
-       * 사진이 없다면 null.
-       *
-       * URL 생성에 실패하더라도
-       * Challenge 상세 조회 전체를 실패시키지 않는다.
-       */
       let photoImageUrl: string | null = null;
 
       if (mission.photoImageKey) {
@@ -394,12 +619,7 @@ export class ChallengesService {
 
   /*
    * INSTITUTION:
-   * Challenge 기본 정보 수정
-   *
-   * 대표사진 초점 위치도 이 API를 통해 수정한다.
-   *
-   * 사진 파일 자체의 업로드/교체/삭제는
-   * 기존 대표사진 전용 API를 그대로 사용한다.
+   * Challenge 기본 정보 및 배지 설정 수정
    */
   async update(
     challengeId: number,
@@ -436,6 +656,26 @@ export class ChallengesService {
 
     const hasEndAt = dto.endAt !== undefined;
 
+    const hasRouteMode = dto.routeMode !== undefined;
+
+    const hasDifficulty = dto.difficulty !== undefined;
+
+    const hasBadgeBorderColor = dto.badgeBorderColor !== undefined;
+
+    const hasBadgeCenterType = dto.badgeCenterType !== undefined;
+
+    const hasBadgeIcon = dto.badgeIcon !== undefined;
+
+    const hasBadgeName = dto.badgeName !== undefined;
+
+    const hasBadgeDescription = dto.badgeDescription !== undefined;
+
+    const hasBadgeImageScale = dto.badgeImageScale !== undefined;
+
+    const hasBadgeImagePositionX = dto.badgeImagePositionX !== undefined;
+
+    const hasBadgeImagePositionY = dto.badgeImagePositionY !== undefined;
+
     const hasCoverPositionX = dto.coverPositionX !== undefined;
 
     const hasCoverPositionY = dto.coverPositionY !== undefined;
@@ -446,23 +686,42 @@ export class ChallengesService {
       !hasRegion &&
       !hasStartAt &&
       !hasEndAt &&
+      !hasRouteMode &&
+      !hasDifficulty &&
+      !hasBadgeBorderColor &&
+      !hasBadgeCenterType &&
+      !hasBadgeIcon &&
+      !hasBadgeName &&
+      !hasBadgeDescription &&
+      !hasBadgeImageScale &&
+      !hasBadgeImagePositionX &&
+      !hasBadgeImagePositionY &&
       !hasCoverPositionX &&
       !hasCoverPositionY
     ) {
       throw new BadRequestException('수정할 정보를 하나 이상 입력해주세요.');
     }
 
-    /*
-     * ACTIVE 상태에서는 운영기간 변경 금지.
-     *
-     * 운영시간을 변경하려면
-     * 먼저 PAUSED로 전환해야 한다.
-     *
-     * 대표사진 초점 위치는 운영 중에도 수정 가능하다.
-     */
     if (challenge.status === 'ACTIVE' && (hasStartAt || hasEndAt)) {
       throw new ConflictException(
         '활성화된 Challenge의 운영기간은 변경할 수 없습니다. 먼저 운영을 일시 중단해주세요.',
+      );
+    }
+
+    const hasBadgeSettingChange =
+      hasDifficulty ||
+      hasBadgeBorderColor ||
+      hasBadgeCenterType ||
+      hasBadgeIcon ||
+      hasBadgeName ||
+      hasBadgeDescription ||
+      hasBadgeImageScale ||
+      hasBadgeImagePositionX ||
+      hasBadgeImagePositionY;
+
+    if (challenge.status === 'ACTIVE' && hasBadgeSettingChange) {
+      throw new ConflictException(
+        '운영 중인 Challenge의 난이도와 완료 배지 설정은 변경할 수 없습니다. 먼저 운영을 일시 중단해주세요.',
       );
     }
 
@@ -499,6 +758,62 @@ export class ChallengesService {
     const nextEndAt =
       dto.endAt !== undefined ? (dto.endAt ?? null) : challenge.endAt;
 
+    const nextRouteMode =
+      dto.routeMode !== undefined ? dto.routeMode : challenge.routeMode;
+
+    const nextDifficulty =
+      dto.difficulty !== undefined
+        ? (dto.difficulty ?? null)
+        : challenge.difficulty;
+
+    const nextBadgeBorderColor =
+      dto.badgeBorderColor !== undefined
+        ? dto.badgeBorderColor === null
+          ? null
+          : dto.badgeBorderColor.trim().toUpperCase()
+        : challenge.badgeBorderColor;
+
+    const nextBadgeCenterType =
+      dto.badgeCenterType !== undefined
+        ? (dto.badgeCenterType ?? null)
+        : challenge.badgeCenterType;
+
+    const nextBadgeIcon =
+      dto.badgeIcon !== undefined
+        ? dto.badgeIcon === null
+          ? null
+          : dto.badgeIcon.trim() || null
+        : challenge.badgeIcon;
+
+    const nextBadgeName =
+      dto.badgeName !== undefined
+        ? dto.badgeName === null
+          ? null
+          : dto.badgeName.trim() || null
+        : challenge.badgeName;
+
+    const nextBadgeDescription =
+      dto.badgeDescription !== undefined
+        ? dto.badgeDescription === null
+          ? null
+          : dto.badgeDescription.trim() || null
+        : challenge.badgeDescription;
+
+    const nextBadgeImageScale =
+      dto.badgeImageScale !== undefined
+        ? dto.badgeImageScale
+        : challenge.badgeImageScale;
+
+    const nextBadgeImagePositionX =
+      dto.badgeImagePositionX !== undefined
+        ? dto.badgeImagePositionX
+        : challenge.badgeImagePositionX;
+
+    const nextBadgeImagePositionY =
+      dto.badgeImagePositionY !== undefined
+        ? dto.badgeImagePositionY
+        : challenge.badgeImagePositionY;
+
     const nextCoverPositionX =
       dto.coverPositionX !== undefined
         ? dto.coverPositionX
@@ -517,11 +832,6 @@ export class ChallengesService {
       throw new BadRequestException('종료일시는 시작일시보다 이후여야 합니다.');
     }
 
-    /*
-     * PAUSED 상태에서 운영기간을 수정할 때
-     * 이미 종료된 시각을 endAt으로 설정하면
-     * 다시 활성화할 수 없으므로 막는다.
-     */
     if (
       challenge.status === 'PAUSED' &&
       nextEndAt &&
@@ -545,6 +855,26 @@ export class ChallengesService {
 
       endAt: nextEndAt,
 
+      routeMode: nextRouteMode,
+
+      difficulty: nextDifficulty,
+
+      badgeBorderColor: nextBadgeBorderColor,
+
+      badgeCenterType: nextBadgeCenterType,
+
+      badgeIcon: nextBadgeIcon,
+
+      badgeName: nextBadgeName,
+
+      badgeDescription: nextBadgeDescription,
+
+      badgeImageScale: nextBadgeImageScale,
+
+      badgeImagePositionX: nextBadgeImagePositionX,
+
+      badgeImagePositionY: nextBadgeImagePositionY,
+
       coverPositionX: nextCoverPositionX,
 
       coverPositionY: nextCoverPositionY,
@@ -564,13 +894,6 @@ export class ChallengesService {
   /*
    * INSTITUTION:
    * Challenge 대표사진 등록 또는 교체
-   *
-   * DRAFT / ACTIVE / PAUSED 상태에서 허용한다.
-   *
-   * 대표사진은 Challenge 수행 조건에 영향을 주지 않는
-   * 화면용 콘텐츠이므로 ACTIVE 상태에서도 변경할 수 있다.
-   *
-   * 기존 사진 업로드/교체 방식은 그대로 유지한다.
    */
   async replaceCover(
     challengeId: number,
@@ -596,12 +919,6 @@ export class ChallengesService {
     let newFileKey: string | null = null;
 
     try {
-      /*
-       * 새 이미지를 먼저 Storage에 업로드한다.
-       *
-       * 기존 이미지를 먼저 지우지 않기 때문에
-       * 새 이미지 등록이 실패해도 기존 사진은 유지된다.
-       */
       newFileKey = await uploadChallengeCover(challenge.id, coverImage);
 
       const updatedChallenge = await db.orm.public.Challenge.where({
@@ -614,19 +931,10 @@ export class ChallengesService {
         throw new Error('대표사진을 수정할 Challenge를 찾을 수 없습니다.');
       }
 
-      /*
-       * DB가 새 사진을 가리키도록 변경된 뒤
-       * 기존 Storage 파일을 정리한다.
-       *
-       * 기존 파일 삭제 실패가
-       * 새 사진 등록 성공을 취소하지는 않는다.
-       */
       if (oldFileKey && oldFileKey !== newFileKey) {
         try {
           await deleteChallengeCover(oldFileKey);
-        } catch {
-          // 추후 Storage 정리 대상으로 남을 수 있다.
-        }
+        } catch {}
       }
 
       return {
@@ -637,16 +945,10 @@ export class ChallengesService {
         challenge: await this.toChallengeResponse(updatedChallenge),
       };
     } catch {
-      /*
-       * 새 Storage 업로드까지 성공했으나
-       * DB 반영이 실패한 경우 새 파일을 삭제한다.
-       */
       if (newFileKey) {
         try {
           await deleteChallengeCover(newFileKey);
-        } catch {
-          // cleanup 오류가 원래 오류를 덮어쓰지 않도록 한다.
-        }
+        } catch {}
       }
 
       throw new InternalServerErrorException(
@@ -668,10 +970,6 @@ export class ChallengesService {
       );
     }
 
-    /*
-     * 이미 대표사진이 없는 경우에도
-     * 안전하게 성공 응답을 돌려준다.
-     */
     if (!challenge.coverImageKey) {
       return {
         message: '등록된 Challenge 대표사진이 없습니다.',
@@ -682,12 +980,6 @@ export class ChallengesService {
 
     const oldFileKey = challenge.coverImageKey;
 
-    /*
-     * 먼저 DB에서 연결을 제거한다.
-     *
-     * Storage를 먼저 지운 뒤 DB 수정에 실패하면
-     * DB가 존재하지 않는 파일을 가리킬 수 있기 때문이다.
-     */
     const updatedChallenge = await db.orm.public.Challenge.where({
       id: challenge.id,
     }).update({
@@ -700,17 +992,9 @@ export class ChallengesService {
       );
     }
 
-    /*
-     * Storage 파일 삭제는 후처리한다.
-     *
-     * Storage 정리에 실패하더라도
-     * 사용자 화면에서는 삭제된 상태가 유지된다.
-     */
     try {
       await deleteChallengeCover(oldFileKey);
-    } catch {
-      // 추후 Storage 정리 대상으로 남을 수 있다.
-    }
+    } catch {}
 
     return {
       message: 'Challenge 대표사진이 삭제되었습니다.',
@@ -720,17 +1004,177 @@ export class ChallengesService {
   }
 
   /*
+   * INSTITUTION:
+   * 완료 배지 중앙 이미지 등록 또는 교체
+   *
+   * 배지 이미지는 BadgeVersion에 포함되는
+   * 역사적인 디자인 자료이므로
+   * 과거 버전에서 사용 중인 이미지는
+   * 새 이미지로 교체하더라도 Storage에서 삭제하지 않는다.
+   *
+   * ACTIVE 상태에서는 배지 구성을 변경할 수 없다.
+   */
+  async replaceBadgeCenterImage(
+    challengeId: number,
+    institutionId: number,
+    badgeImage?: BadgeCenterImageUploadFile,
+  ) {
+    if (!badgeImage) {
+      throw new BadRequestException('등록할 완료 배지 이미지를 선택해주세요.');
+    }
+
+    this.validateBadgeImage(badgeImage);
+
+    const challenge = await this.findOwnedChallenge(challengeId, institutionId);
+
+    if (challenge.status === 'ACTIVE') {
+      throw new ConflictException(
+        '운영 중인 Challenge의 완료 배지 이미지는 변경할 수 없습니다. 먼저 운영을 일시 중단해주세요.',
+      );
+    }
+
+    if (challenge.status === 'ENDED' || challenge.status === 'ARCHIVED') {
+      throw new ConflictException(
+        '종료되거나 보관된 Challenge의 완료 배지는 수정할 수 없습니다.',
+      );
+    }
+
+    const oldFileKey = challenge.badgeCenterImageKey;
+
+    let newFileKey: string | null = null;
+
+    try {
+      newFileKey = await uploadBadgeCenterImage(challenge.id, badgeImage);
+
+      const updatedChallenge = await db.orm.public.Challenge.where({
+        id: challenge.id,
+      }).update({
+        badgeCenterImageKey: newFileKey,
+      });
+
+      if (!updatedChallenge) {
+        throw new Error(
+          '완료 배지 이미지를 저장할 Challenge를 찾을 수 없습니다.',
+        );
+      }
+
+      /*
+       * 기존 이미지가 있는 경우
+       * 과거 BadgeVersion이 사용하고 있는지 검사한다.
+       */
+      if (oldFileKey && oldFileKey !== newFileKey) {
+        const usedByVersion = await this.isBadgeImageUsedByVersion(oldFileKey);
+
+        /*
+         * 과거 버전이 사용하지 않는 이미지일 때만
+         * Storage에서 실제 삭제한다.
+         */
+        if (!usedByVersion) {
+          try {
+            await deleteBadgeCenterImage(oldFileKey);
+          } catch {}
+        }
+      }
+
+      return {
+        message: oldFileKey
+          ? '완료 배지 이미지가 교체되었습니다.'
+          : '완료 배지 이미지가 등록되었습니다.',
+
+        challenge: await this.toChallengeResponse(updatedChallenge),
+      };
+    } catch (error) {
+      /*
+       * 새 이미지 업로드 이후 DB 반영에 실패한 경우
+       * 새 파일은 어떤 BadgeVersion도 아직 사용하지 않으므로
+       * 안전하게 삭제한다.
+       */
+      if (newFileKey) {
+        try {
+          await deleteBadgeCenterImage(newFileKey);
+        } catch {}
+      }
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ConflictException ||
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        '완료 배지 이미지를 저장하는 중 오류가 발생했습니다.',
+      );
+    }
+  }
+
+  /*
+   * INSTITUTION:
+   * 현재 Challenge의 완료 배지 중앙 이미지 연결 제거
+   *
+   * 과거 BadgeVersion이 해당 이미지를 사용 중이면
+   * DB의 현재 Challenge 연결만 제거하고
+   * Storage 파일 자체는 보존한다.
+   */
+  async removeBadgeCenterImage(challengeId: number, institutionId: number) {
+    const challenge = await this.findOwnedChallenge(challengeId, institutionId);
+
+    if (challenge.status === 'ACTIVE') {
+      throw new ConflictException(
+        '운영 중인 Challenge의 완료 배지 이미지는 삭제할 수 없습니다. 먼저 운영을 일시 중단해주세요.',
+      );
+    }
+
+    if (challenge.status === 'ENDED' || challenge.status === 'ARCHIVED') {
+      throw new ConflictException(
+        '종료되거나 보관된 Challenge의 완료 배지는 수정할 수 없습니다.',
+      );
+    }
+
+    if (!challenge.badgeCenterImageKey) {
+      return {
+        message: '등록된 완료 배지 이미지가 없습니다.',
+
+        challenge: await this.toChallengeResponse(challenge),
+      };
+    }
+
+    const oldFileKey = challenge.badgeCenterImageKey;
+
+    const updatedChallenge = await db.orm.public.Challenge.where({
+      id: challenge.id,
+    }).update({
+      badgeCenterImageKey: null,
+    });
+
+    if (!updatedChallenge) {
+      throw new NotFoundException(
+        '완료 배지 이미지를 삭제할 Challenge를 찾을 수 없습니다.',
+      );
+    }
+
+    const usedByVersion = await this.isBadgeImageUsedByVersion(oldFileKey);
+
+    if (!usedByVersion) {
+      try {
+        await deleteBadgeCenterImage(oldFileKey);
+      } catch {}
+    }
+
+    return {
+      message: usedByVersion
+        ? '현재 완료 배지 이미지 연결이 제거되었습니다. 과거 배지 버전에서 사용 중인 원본 이미지는 보존됩니다.'
+        : '완료 배지 이미지가 삭제되었습니다.',
+
+      challenge: await this.toChallengeResponse(updatedChallenge),
+    };
+  }
+
+  /*
    * PUBLIC:
    * 현재 실제 운영 중인 Challenge 목록
-   *
-   * 단순히 status === ACTIVE만 보는 것이 아니라
-   * startAt / endAt까지 함께 검사한다.
-   *
-   * 미래 시작 ACTIVE:
-   * 목록에서 숨김
-   *
-   * 종료시간이 지난 ACTIVE:
-   * 목록에서 숨김
    */
   async findActive() {
     const activeChallenges = await db.orm.public.Challenge.where({
@@ -755,18 +1199,6 @@ export class ChallengesService {
   /*
    * PUBLIC:
    * 현재 실제 운영 중인 Challenge 상세 조회
-   *
-   * 여행자에게는 ACTIVE Mission만 공개한다.
-   *
-   * Challenge 대표사진과 마찬가지로
-   * Mission 관광지 대표사진도
-   * Storage 내부 key는 노출하지 않는다.
-   *
-   * Mission 사진이 있는 경우
-   * Signed URL만 응답한다.
-   *
-   * Signed URL 생성에 실패해도
-   * Challenge 상세 조회 전체는 유지한다.
    */
   async findActiveById(challengeId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -783,20 +1215,10 @@ export class ChallengesService {
       challengeId,
     }).all();
 
-    /*
-     * USER에게 공개할 ACTIVE Mission만 남긴 뒤
-     * 기관이 지정한 sortOrder 순으로 정렬한다.
-     */
     const activeMissions = missions
       .filter((mission) => mission.status === 'ACTIVE')
       .sort((a, b) => a.sortOrder - b.sortOrder);
 
-    /*
-     * Mission별 대표사진 Signed URL 생성은
-     * 비동기 작업이므로 Promise.all()을 사용한다.
-     *
-     * photoImageKey 자체는 응답하지 않는다.
-     */
     const publicMissions = await Promise.all(
       activeMissions.map(async (mission) => {
         let photoImageUrl: string | null = null;
@@ -807,11 +1229,6 @@ export class ChallengesService {
               mission.photoImageKey,
             );
           } catch {
-            /*
-             * Storage URL 생성 실패 때문에
-             * Challenge 상세 조회 전체가
-             * 실패하지 않도록 한다.
-             */
             photoImageUrl = null;
           }
         }
@@ -871,11 +1288,9 @@ export class ChallengesService {
    * USER:
    * 특정 Challenge의 본인 진행률 조회
    *
-   * 이미 참여한 사용자의 기록은
-   * Challenge 운영이 끝나더라도 보존한다.
-   *
-   * 현재 Challenge 완료 조건은
-   * ACTIVE Mission만 기준으로 계산한다.
+   * completedAt이 존재하면
+   * 현재 Mission 구성이 달라졌더라도
+   * Challenge 완료 상태는 영구 유지한다.
    */
   async findProgress(userId: number, challengeId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -910,6 +1325,8 @@ export class ChallengesService {
 
         joinedAt: null,
 
+        completedAt: null,
+
         totalMissionCount,
 
         completedMissionCount: 0,
@@ -941,8 +1358,11 @@ export class ChallengesService {
         ? 0
         : Math.round((completedMissionCount / totalMissionCount) * 100);
 
-    const completed =
+    const currentMissionSetCompleted =
       totalMissionCount > 0 && completedMissionCount === totalMissionCount;
+
+    const completed =
+      participation.completedAt !== null || currentMissionSetCompleted;
 
     return {
       challengeId,
@@ -950,6 +1370,8 @@ export class ChallengesService {
       joined: true,
 
       joinedAt: participation.joinedAt,
+
+      completedAt: participation.completedAt,
 
       totalMissionCount,
 
@@ -969,11 +1391,8 @@ export class ChallengesService {
    * INSTITUTION:
    * 최초 운영 활성화
    *
-   * DRAFT -> ACTIVE
-   *
-   * 미래 시작시간도 허용한다.
-   *
-   * 현재 ACTIVE Mission이 최소 하나는 있어야 한다.
+   * BadgeVersion을 먼저 확정한 뒤
+   * ACTIVE로 변경한다.
    */
   async activate(challengeId: number, institutionId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -1016,6 +1435,8 @@ export class ChallengesService {
       );
     }
 
+    await this.ensureCurrentBadgeVersion(challengeId);
+
     const updatedChallenge = await db.orm.public.Challenge.where({
       id: challengeId,
     }).update({
@@ -1043,8 +1464,6 @@ export class ChallengesService {
   /*
    * INSTITUTION:
    * 운영 일시 중단
-   *
-   * ACTIVE -> PAUSED
    */
   async pause(challengeId: number, institutionId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -1090,9 +1509,9 @@ export class ChallengesService {
    * INSTITUTION:
    * 운영 재활성화
    *
-   * PAUSED -> ACTIVE
-   *
-   * 현재 ACTIVE Mission이 최소 하나는 있어야 한다.
+   * PAUSED 상태에서 변경된 Mission과
+   * 배지 설정을 기준으로 새 BadgeVersion 필요 여부를
+   * 판단한 뒤 ACTIVE로 변경한다.
    */
   async resume(challengeId: number, institutionId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -1134,6 +1553,8 @@ export class ChallengesService {
         '운영 종료일시가 이미 지난 Challenge는 다시 운영할 수 없습니다.',
       );
     }
+
+    await this.ensureCurrentBadgeVersion(challengeId);
 
     const updatedChallenge = await db.orm.public.Challenge.where({
       id: challengeId,
@@ -1202,9 +1623,6 @@ export class ChallengesService {
   /*
    * INSTITUTION:
    * DRAFT Challenge 삭제
-   *
-   * 한 번이라도 운영한 Challenge는
-   * 기록 보존을 위해 물리 삭제하지 않는다.
    */
   async remove(challengeId: number, institutionId: number) {
     const challenge = await db.orm.public.Challenge.first({
@@ -1255,6 +1673,8 @@ export class ChallengesService {
 
     const coverImageKey = challenge.coverImageKey;
 
+    const badgeCenterImageKey = challenge.badgeCenterImageKey;
+
     await db.transaction(async (tx) => {
       for (const mission of missions) {
         await tx.orm.public.Mission.where({
@@ -1267,19 +1687,21 @@ export class ChallengesService {
       }).delete();
     });
 
-    /*
-     * DB 삭제가 완료된 뒤
-     * Challenge 대표사진도 Storage에서 정리한다.
-     *
-     * Storage 정리 실패 때문에 이미 완료된
-     * Challenge 삭제 결과를 실패로 되돌리지는 않는다.
-     */
     if (coverImageKey) {
       try {
         await deleteChallengeCover(coverImageKey);
-      } catch {
-        // 추후 Storage 정리 대상으로 남을 수 있다.
-      }
+      } catch {}
+    }
+
+    /*
+     * DRAFT Challenge는 아직 BadgeVersion이
+     * 생성되지 않은 상태이므로
+     * 배지 중앙 이미지도 안전하게 정리한다.
+     */
+    if (badgeCenterImageKey) {
+      try {
+        await deleteBadgeCenterImage(badgeCenterImageKey);
+      } catch {}
     }
 
     return {
