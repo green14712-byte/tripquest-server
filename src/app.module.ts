@@ -12,6 +12,7 @@ import { MissionsModule } from './missions/missions.module';
 import { ChallengeParticipationsModule } from './challenge-participations/challenge-participations.module';
 import { MissionCompletionsModule } from './mission-completions/mission-completions.module';
 import { UserBadgesModule } from './user-badges/user-badges.module';
+import { ChallengeReviewsModule } from './challenge-reviews/challenge-reviews.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UserBadgesModule } from './user-badges/user-badges.module';
     ChallengeParticipationsModule,
     MissionCompletionsModule,
     UserBadgesModule,
+    ChallengeReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

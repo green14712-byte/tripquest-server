@@ -12,6 +12,10 @@
       "model": "ChallengeParticipation",
       "namespace": "public"
     },
+    "challenge_reviews": {
+      "model": "ChallengeReview",
+      "namespace": "public"
+    },
     "challenges": {
       "model": "Challenge",
       "namespace": "public"
@@ -729,6 +733,21 @@
                   "namespace": "public"
                 }
               },
+              "reviews": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "challengeId"
+                  ]
+                },
+                "to": {
+                  "model": "ChallengeReview",
+                  "namespace": "public"
+                }
+              },
               "userBadges": {
                 "cardinality": "1:N",
                 "on": {
@@ -919,6 +938,120 @@
               },
               "namespaceId": "public",
               "table": "challenge_participations"
+            }
+          },
+          "ChallengeReview": {
+            "fields": {
+              "challengeId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "comment": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "rating": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "challenge": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "challengeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Challenge",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "challengeId": {
+                  "column": "challengeId"
+                },
+                "comment": {
+                  "column": "comment"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "rating": {
+                  "column": "rating"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "challenge_reviews"
             }
           },
           "EmailVerification": {
@@ -2038,6 +2171,21 @@
               }
             },
             "relations": {
+              "challengeReviews": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "ChallengeReview",
+                  "namespace": "public"
+                }
+              },
               "institution": {
                 "cardinality": "N:1",
                 "nullable": true,
@@ -2574,6 +2722,142 @@
                   ],
                   "name": "challenge_participations_userId_idx_a489d58a",
                   "prefix": "challenge_participations_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "userId",
+                    "challengeId"
+                  ]
+                }
+              ]
+            },
+            "challenge_reviews": {
+              "columns": {
+                "challengeId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "comment": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "rating": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "challenge_reviews_userId_idx_a489d58a"
+                  },
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenge_reviews"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "users"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "challenge_reviews_challengeId_idx_73b8115d"
+                  },
+                  "source": {
+                    "columns": [
+                      "challengeId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenge_reviews"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "challenges"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "challengeId",
+                    "createdAt"
+                  ],
+                  "name": "challenge_reviews_challengeId_createdAt_idx_f13d71b2",
+                  "prefix": "challenge_reviews_challengeId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "challengeId"
+                  ],
+                  "name": "challenge_reviews_challengeId_idx_73b8115d",
+                  "prefix": "challenge_reviews_challengeId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "challengeId",
+                    "rating"
+                  ],
+                  "name": "challenge_reviews_challengeId_rating_idx_6b836fbc",
+                  "prefix": "challenge_reviews_challengeId_rating_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "challenge_reviews_userId_idx_a489d58a",
+                  "prefix": "challenge_reviews_userId_idx",
                   "unique": false
                 }
               ],
@@ -4041,12 +4325,27 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "e6dd16de69c7c985ae99ef28e59360940997e26de817e942ccc9663b313508b2"
+    "storageHash": "0a863a264fc5671fe881bac257b166f4bd87c212e3d2423090372dcbcdc02c74"
   },
   "execution": {
-    "executionHash": "da7e4e82504f21dce733cb4e8da993bf77c11275547dddd7a496e1456fbac450",
+    "executionHash": "cf3becb58e362fb09127b5387c1c4ccd562b38f5aff844aad6036ce8ebe80f5d",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "challenge_reviews",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
         {
           "onCreate": {
             "id": "timestampNow",

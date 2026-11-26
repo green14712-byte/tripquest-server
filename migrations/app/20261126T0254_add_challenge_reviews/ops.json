@@ -1,0 +1,323 @@
+[
+  {
+    "id": "table.challenge_reviews",
+    "label": "Create table \"challenge_reviews\"",
+    "summary": "Creates table \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"challenge_reviews\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"challenge_reviews\"",
+        "sql": "CREATE TABLE \"public\".\"challenge_reviews\" (\n  \"challengeId\" int4 NOT NULL,\n  \"comment\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"rating\" int4 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"challenge_reviews\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.challenge_reviews.challenge_reviews_userId_challengeId_key",
+    "label": "Add unique constraint on \"challenge_reviews\" (userId, challengeId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "challenge_reviews_userId_challengeId_key",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"challenge_reviews_userId_challengeId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_userId_challengeId_key",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"challenge_reviews_userId_challengeId_key\"",
+        "sql": "ALTER TABLE \"public\".\"challenge_reviews\" ADD CONSTRAINT \"challenge_reviews_userId_challengeId_key\" UNIQUE (\"userId\", \"challengeId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"challenge_reviews_userId_challengeId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_userId_challengeId_key",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge_reviews.challenge_reviews_challengeId_createdAt_idx_f13d71b2",
+    "label": "Create index \"challenge_reviews_challengeId_createdAt_idx_f13d71b2\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_reviews_challengeId_createdAt_idx_f13d71b2",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_reviews_challengeId_createdAt_idx_f13d71b2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_createdAt_idx_f13d71b2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_reviews_challengeId_createdAt_idx_f13d71b2\"",
+        "sql": "CREATE INDEX \"challenge_reviews_challengeId_createdAt_idx_f13d71b2\" ON \"public\".\"challenge_reviews\" (\"challengeId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_reviews_challengeId_createdAt_idx_f13d71b2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_createdAt_idx_f13d71b2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge_reviews.challenge_reviews_challengeId_idx_73b8115d",
+    "label": "Create index \"challenge_reviews_challengeId_idx_73b8115d\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_reviews_challengeId_idx_73b8115d",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_reviews_challengeId_idx_73b8115d\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_idx_73b8115d\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_reviews_challengeId_idx_73b8115d\"",
+        "sql": "CREATE INDEX \"challenge_reviews_challengeId_idx_73b8115d\" ON \"public\".\"challenge_reviews\" (\"challengeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_reviews_challengeId_idx_73b8115d\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_idx_73b8115d\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge_reviews.challenge_reviews_challengeId_rating_idx_6b836fbc",
+    "label": "Create index \"challenge_reviews_challengeId_rating_idx_6b836fbc\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_reviews_challengeId_rating_idx_6b836fbc",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_reviews_challengeId_rating_idx_6b836fbc\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_rating_idx_6b836fbc\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_reviews_challengeId_rating_idx_6b836fbc\"",
+        "sql": "CREATE INDEX \"challenge_reviews_challengeId_rating_idx_6b836fbc\" ON \"public\".\"challenge_reviews\" (\"challengeId\", \"rating\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_reviews_challengeId_rating_idx_6b836fbc\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_challengeId_rating_idx_6b836fbc\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.challenge_reviews.challenge_reviews_userId_idx_a489d58a",
+    "label": "Create index \"challenge_reviews_userId_idx_a489d58a\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "challenge_reviews_userId_idx_a489d58a",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"challenge_reviews_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"challenge_reviews_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"challenge_reviews_userId_idx_a489d58a\" ON \"public\".\"challenge_reviews\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"challenge_reviews_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"challenge_reviews_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.challenge_reviews.challenge_reviews_userId_fkey",
+    "label": "Add foreign key \"challenge_reviews_userId_fkey\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "challenge_reviews_userId_fkey",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"challenge_reviews_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_userId_fkey",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"challenge_reviews_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"challenge_reviews\"\nADD CONSTRAINT \"challenge_reviews_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"users\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"challenge_reviews_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_userId_fkey",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.challenge_reviews.challenge_reviews_challengeId_fkey",
+    "label": "Add foreign key \"challenge_reviews_challengeId_fkey\" on \"challenge_reviews\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "challenge_reviews_challengeId_fkey",
+        "table": "challenge_reviews"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"challenge_reviews_challengeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_challengeId_fkey",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"challenge_reviews_challengeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"challenge_reviews\"\nADD CONSTRAINT \"challenge_reviews_challengeId_fkey\"\nFOREIGN KEY (\"challengeId\")\nREFERENCES \"public\".\"challenges\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"challenge_reviews_challengeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "challenge_reviews_challengeId_fkey",
+          "public",
+          "\"public\".\"challenge_reviews\""
+        ]
+      }
+    ]
+  }
+]

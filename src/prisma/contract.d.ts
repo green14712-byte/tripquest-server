@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'e6dd16de69c7c985ae99ef28e59360940997e26de817e942ccc9663b313508b2'>;
+  StorageHashBase<'0a863a264fc5671fe881bac257b166f4bd87c212e3d2423090372dcbcdc02c74'>;
 export type ExecutionHash =
-  ExecutionHashBase<'da7e4e82504f21dce733cb4e8da993bf77c11275547dddd7a496e1456fbac450'>;
+  ExecutionHashBase<'cf3becb58e362fb09127b5387c1c4ccd562b38f5aff844aad6036ce8ebe80f5d'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -286,6 +286,15 @@ export type FieldOutputTypes = {
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
     };
+    readonly ChallengeReview: {
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly comment: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly rating: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly EmailVerification: {
       readonly attemptCount: CodecTypes['pg/int4@1']['output'];
       readonly codeHash: CodecTypes['pg/text@1']['output'];
@@ -455,6 +464,15 @@ export type FieldInputTypes = {
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
     };
+    readonly ChallengeReview: {
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly comment: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly rating: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly EmailVerification: {
       readonly attemptCount: CodecTypes['pg/int4@1']['input'];
       readonly codeHash: CodecTypes['pg/text@1']['input'];
@@ -595,6 +613,15 @@ export type StorageColumnTypes = {
       readonly completedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly challenge_reviews: {
+      readonly challengeId: CodecTypes['pg/int4@1']['output'];
+      readonly comment: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly rating: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly userId: CodecTypes['pg/int4@1']['output'];
     };
     readonly challenges: {
@@ -764,6 +791,15 @@ export type StorageColumnInputTypes = {
       readonly completedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly challenge_reviews: {
+      readonly challengeId: CodecTypes['pg/int4@1']['input'];
+      readonly comment: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly rating: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly userId: CodecTypes['pg/int4@1']['input'];
     };
     readonly challenges: {
@@ -963,6 +999,7 @@ export namespace Models {
     institution: public_Institution;
     missions: public_Mission[];
     participations: public_ChallengeParticipation[];
+    reviews: public_ChallengeReview[];
     userBadges: public_UserBadge[];
     readonly [RelationKeys]?:
       | 'badgeVersions'
@@ -970,6 +1007,7 @@ export namespace Models {
       | 'institution'
       | 'missions'
       | 'participations'
+      | 'reviews'
       | 'userBadges';
   };
   export type public_ChallengeParticipation = {
@@ -977,6 +1015,18 @@ export namespace Models {
     completedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     id: CodecTypes['pg/int4@1']['output'];
     joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    userId: CodecTypes['pg/int4@1']['output'];
+    challenge: public_Challenge;
+    user: public_User;
+    readonly [RelationKeys]?: 'challenge' | 'user';
+  };
+  export type public_ChallengeReview = {
+    challengeId: CodecTypes['pg/int4@1']['output'];
+    comment: CodecTypes['pg/text@1']['output'] | null;
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/int4@1']['output'];
+    rating: CodecTypes['pg/int4@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     userId: CodecTypes['pg/int4@1']['output'];
     challenge: public_Challenge;
     user: public_User;
@@ -1103,6 +1153,7 @@ export namespace Models {
     suspendedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     suspensionReason: CodecTypes['pg/text@1']['output'] | null;
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    challengeReviews: public_ChallengeReview[];
     institution: public_Institution | null;
     institutionApplications: public_InstitutionApplication[];
     missionCompletions: public_MissionCompletion[];
@@ -1110,6 +1161,7 @@ export namespace Models {
     reviewedInstitutionApplications: public_InstitutionApplication[];
     userBadges: public_UserBadge[];
     readonly [RelationKeys]?:
+      | 'challengeReviews'
       | 'institution'
       | 'institutionApplications'
       | 'missionCompletions'
@@ -1136,6 +1188,7 @@ export declare const models: {
     BadgeVersion: Models.public_BadgeVersion;
     Challenge: Models.public_Challenge;
     ChallengeParticipation: Models.public_ChallengeParticipation;
+    ChallengeReview: Models.public_ChallengeReview;
     EmailVerification: Models.public_EmailVerification;
     Institution: Models.public_Institution;
     InstitutionApplication: Models.public_InstitutionApplication;
@@ -1378,6 +1431,111 @@ type ContractBase = Omit<
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'challenge_participations';
+                    readonly columns: readonly ['challengeId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenges';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly challenge_reviews: {
+              columns: {
+                readonly challengeId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly comment: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly rating: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'challengeId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'challenge_reviews_challengeId_createdAt_idx_f13d71b2';
+                  readonly prefix: 'challenge_reviews_challengeId_createdAt_idx';
+                  readonly columns: readonly ['challengeId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_reviews_challengeId_idx_73b8115d';
+                  readonly prefix: 'challenge_reviews_challengeId_idx';
+                  readonly columns: readonly ['challengeId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_reviews_challengeId_rating_idx_6b836fbc';
+                  readonly prefix: 'challenge_reviews_challengeId_rating_idx';
+                  readonly columns: readonly ['challengeId', 'rating'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'challenge_reviews_userId_idx_a489d58a';
+                  readonly prefix: 'challenge_reviews_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenge_reviews';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'users';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'challenge_reviews';
                     readonly columns: readonly ['challengeId'];
                   };
                   readonly target: {
@@ -2613,6 +2771,10 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'ChallengeParticipation';
     };
+    readonly challenge_reviews: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'ChallengeReview';
+    };
     readonly challenges: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Challenge';
@@ -2955,6 +3117,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['challengeId'];
                 };
               };
+              readonly reviews: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ChallengeReview';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['challengeId'];
+                };
+              };
               readonly userBadges: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -3059,6 +3232,80 @@ type ContractBase = Omit<
                 readonly completedAt: { readonly column: 'completedAt' };
                 readonly id: { readonly column: 'id' };
                 readonly joinedAt: { readonly column: 'joinedAt' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
+          readonly ChallengeReview: {
+            readonly fields: {
+              readonly challengeId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly comment: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly rating: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly challenge: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Challenge';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['challengeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'challenge_reviews';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly challengeId: { readonly column: 'challengeId' };
+                readonly comment: { readonly column: 'comment' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly rating: { readonly column: 'rating' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
                 readonly userId: { readonly column: 'userId' };
               };
             };
@@ -3757,6 +4004,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly challengeReviews: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ChallengeReview';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
               readonly institution: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -4091,6 +4349,15 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'challenge_reviews';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
           readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };

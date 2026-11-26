@@ -1173,6 +1173,25 @@ export class ChallengesService {
   }
 
   /*
+   * 공개 Challenge에 표시할 실제 후기 통계.
+   * 별점은 저장된 ChallengeReview를 기준으로 계산한다.
+   */
+  private async getReviewSummary(challengeId: number) {
+    const reviews = await db.orm.public.ChallengeReview.where({
+      challengeId,
+    }).all();
+
+    const reviewCount = reviews.length;
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+
+    return {
+      averageRating:
+        reviewCount > 0 ? Number((totalRating / reviewCount).toFixed(1)) : 0,
+      reviewCount,
+    };
+  }
+
+  /*
    * PUBLIC:
    * 현재 실제 운영 중인 Challenge 목록
    */
@@ -1188,7 +1207,17 @@ export class ChallengesService {
     );
 
     const challenges = await Promise.all(
-      visibleChallenges.map((challenge) => this.toChallengeResponse(challenge)),
+      visibleChallenges.map(async (challenge) => {
+        const [responseChallenge, reviewSummary] = await Promise.all([
+          this.toChallengeResponse(challenge),
+          this.getReviewSummary(challenge.id),
+        ]);
+
+        return {
+          ...responseChallenge,
+          ...reviewSummary,
+        };
+      }),
     );
 
     return {
@@ -1277,8 +1306,16 @@ export class ChallengesService {
       }),
     );
 
+    const [responseChallenge, reviewSummary] = await Promise.all([
+      this.toChallengeResponse(challenge),
+      this.getReviewSummary(challengeId),
+    ]);
+
     return {
-      challenge: await this.toChallengeResponse(challenge),
+      challenge: {
+        ...responseChallenge,
+        ...reviewSummary,
+      },
 
       missions: publicMissions,
     };

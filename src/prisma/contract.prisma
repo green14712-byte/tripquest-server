@@ -1,3 +1,4 @@
+
 // use prisma-8
 
 enum UserRole {
@@ -134,6 +135,9 @@ model User {
 
   // 사용자가 실제로 획득한 Challenge 완료 배지
   userBadges UserBadge[]
+
+  // 사용자가 완료한 Challenge에 작성한 별점 및 후기
+  challengeReviews ChallengeReview[]
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -452,6 +456,9 @@ model Challenge {
   userBadges UserBadge[]
     @relation("ChallengeUserBadges")
 
+  // Challenge를 완료한 USER들이 작성한 별점 및 후기
+  reviews ChallengeReview[]
+
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 
@@ -724,4 +731,66 @@ model UserBadge {
   @@index([challengeId])
 
   @@map("user_badges")
+}
+
+// Challenge를 완료한 여행자가 작성하는 별점 및 후기
+//
+// 작성 조건:
+// 1. 일반 여행자(USER) 계정이어야 한다.
+// 2. 정상적인 ACTIVE 계정이어야 한다.
+// 3. ChallengeParticipation.completedAt이 존재해야 한다.
+//
+// 현재 Mission 진행률이 아니라 최초 완료 기록을 기준으로
+// 후기 작성 자격을 판단한다.
+//
+// 후기 작성 여부는 Challenge 완료 및 배지 지급과
+// 독립적으로 처리한다.
+model ChallengeReview {
+  id Int @id @default(autoincrement())
+
+  // 후기를 작성한 여행자
+  userId Int
+  user   User @relation(
+    fields: [userId],
+    references: [id]
+  )
+
+  // 평가 대상 Challenge
+  challengeId Int
+  challenge   Challenge @relation(
+    fields: [challengeId],
+    references: [id]
+  )
+
+  // 여행자가 부여한 별점
+  //
+  // 1 ~ 5 사이의 정수만 허용한다.
+  // 등록 및 수정 시 백엔드에서 범위를 검사한다.
+  //
+  // 기관이 설정하는 Challenge 난이도와는 별개의 값이다.
+  rating Int
+
+  // 여행자가 작성한 후기 내용
+  //
+  // 후기 내용은 선택 사항이다.
+  // 별점만 등록하는 경우 NULL로 저장할 수 있다.
+  comment String?
+
+  // 최초 후기 작성 시간
+  createdAt TimestamptzString @default(now())
+
+  // 마지막 후기 수정 시간
+  updatedAt temporal.updatedAtString()
+
+  // 같은 사용자는 동일 Challenge에
+  // 하나의 후기만 등록할 수 있다.
+  @@unique([userId, challengeId])
+
+  // Challenge별 최신순 후기 조회
+  @@index([challengeId, createdAt])
+
+  // Challenge별 높은 별점순 / 낮은 별점순 조회
+  @@index([challengeId, rating])
+
+  @@map("challenge_reviews")
 }
